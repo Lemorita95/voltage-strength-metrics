@@ -1,0 +1,14 @@
+\begin{tabular}{@{}l >{\raggedright\arraybackslash}p{0.82\linewidth}@{}}
+\toprule
+Metric & Definition; network, evaluation point; interaction; source \\
+\midrule
+SCR & $S_i / P_i$ \\
+ & \footnotesize 37-bus (no IBR), host bus, 69 kV; none; IEEE 2800-2022 \\[2pt]
+WSCR & $\sum_i S_i P_i \,/\, (\sum_i P_i)^2$ \\
+ & \footnotesize 37-bus (no IBR), host bus, 69 kV; weights $P_i$; IEEE 2800-2022 \\[2pt]
+ESCR & $S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$ \\
+ & \footnotesize 46-bus (with IBR), padmount, 34.5 kV; $\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$; CIGRE multi-infeed brochure, eq. (1-4), $Q_f = 0$ \\[2pt]
+SDSCR & $|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$ \\
+ & \footnotesize 46-bus (with IBR), converter terminal, 0.69 kV; $w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$; Wu et al. (2018) \\[2pt]
+\bottomrule
+\end{tabular}

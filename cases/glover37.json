@@ -1,0 +1,1571 @@
+{
+    "buses": [
+        {
+            "id": 31,
+            "name": "SLACK345",
+            "nom_kv": 345.0,
+            "bus_type": "Slack",
+            "V": 1.03,
+            "angle": -14.78
+        },
+        {
+            "id": 27,
+            "name": "HISKY69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 10,
+            "name": "RAY69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 12,
+            "name": "TIM69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 13,
+            "name": "FERNA69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 15,
+            "name": "ZEB69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 55,
+            "name": "DEMAR69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 16,
+            "name": "PETE69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 17,
+            "name": "PAI69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 18,
+            "name": "HANNAH69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 19,
+            "name": "GROSS69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 20,
+            "name": "SCOT69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 21,
+            "name": "WOLEN69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 5,
+            "name": "HOMER69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 1,
+            "name": "TIM345",
+            "nom_kv": 345.0
+        },
+        {
+            "id": 56,
+            "name": "LYNN138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 29,
+            "name": "JO138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 30,
+            "name": "CAROL138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 3,
+            "name": "MORO138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 32,
+            "name": "NICOL138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 33,
+            "name": "NICOL69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 34,
+            "name": "PATTEN69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 35,
+            "name": "SLACK138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 37,
+            "name": "AMANDA69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 38,
+            "name": "RAY345",
+            "nom_kv": 345.0
+        },
+        {
+            "id": 39,
+            "name": "RAY138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 40,
+            "name": "TIM138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 41,
+            "name": "LAUF138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 24,
+            "name": "HIMAN69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 47,
+            "name": "BOB138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 44,
+            "name": "LAUF69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 14,
+            "name": "WEBER69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 54,
+            "name": "SANDERS69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 53,
+            "name": "SANDERS138",
+            "nom_kv": 138.0
+        },
+        {
+            "id": 28,
+            "name": "JO345",
+            "nom_kv": 345.0
+        },
+        {
+            "id": 50,
+            "name": "DAVIS69",
+            "nom_kv": 69.0
+        },
+        {
+            "id": 48,
+            "name": "BOB69",
+            "nom_kv": 69.0
+        }
+    ],
+    "elements": {
+        "lines": [
+            {
+                "from_bus": 17,
+                "to_bus": 19,
+                "z_series": {
+                    "R": 0.02703,
+                    "X": 0.03613
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.002
+                },
+                "name": "Line 17-19 ckt 1"
+            },
+            {
+                "from_bus": 39,
+                "to_bus": 47,
+                "z_series": {
+                    "R": 0.00775,
+                    "X": 0.05244
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0154
+                },
+                "name": "Line 39-47 ckt 1"
+            },
+            {
+                "from_bus": 39,
+                "to_bus": 40,
+                "z_series": {
+                    "R": 0.01161,
+                    "X": 0.08085
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0225
+                },
+                "name": "Line 39-40 ckt 1"
+            },
+            {
+                "from_bus": 47,
+                "to_bus": 53,
+                "z_series": {
+                    "R": 0.00204,
+                    "X": 0.00692
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.1601
+                },
+                "name": "Line 47-53 ckt 1"
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 16,
+                "z_series": {
+                    "R": 0.00753,
+                    "X": 0.02582
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0206
+                },
+                "name": "Line 15-16 ckt 1"
+            },
+            {
+                "from_bus": 12,
+                "to_bus": 17,
+                "z_series": {
+                    "R": 0.02172,
+                    "X": 0.06935
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0019
+                },
+                "name": "Line 12-17 ckt 1"
+            },
+            {
+                "from_bus": 48,
+                "to_bus": 54,
+                "z_series": {
+                    "R": 0.01473,
+                    "X": 0.036
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0744
+                },
+                "name": "Line 48-54 ckt 1"
+            },
+            {
+                "from_bus": 3,
+                "to_bus": 40,
+                "z_series": {
+                    "R": 0.0048,
+                    "X": 0.0368
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0182
+                },
+                "name": "Line 3-40 ckt 1"
+            },
+            {
+                "from_bus": 18,
+                "to_bus": 37,
+                "z_series": {
+                    "R": 0.01017,
+                    "X": 0.00559
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0253
+                },
+                "name": "Line 18-37 ckt 1"
+            },
+            {
+                "from_bus": 10,
+                "to_bus": 13,
+                "z_series": {
+                    "R": 0.03375,
+                    "X": 0.0789
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0012
+                },
+                "name": "Line 10-13 ckt 1"
+            },
+            {
+                "from_bus": 13,
+                "to_bus": 55,
+                "z_series": {
+                    "R": 0.02216,
+                    "X": 0.0904
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0017
+                },
+                "name": "Line 13-55 ckt 1"
+            },
+            {
+                "from_bus": 3,
+                "to_bus": 41,
+                "z_series": {
+                    "R": 0.00902,
+                    "X": 0.0571
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0135
+                },
+                "name": "Line 3-41 ckt 1"
+            },
+            {
+                "from_bus": 14,
+                "to_bus": 34,
+                "z_series": {
+                    "R": 0.02625,
+                    "X": 0.06429
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0012
+                },
+                "name": "Line 14-34 ckt 1"
+            },
+            {
+                "from_bus": 32,
+                "to_bus": 29,
+                "z_series": {
+                    "R": 0.0103,
+                    "X": 0.05681
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0164
+                },
+                "name": "Line 32-29 ckt 1"
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 24,
+                "z_series": {
+                    "R": 0.01835,
+                    "X": 0.02845
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0221
+                },
+                "name": "Line 15-24 ckt 1"
+            },
+            {
+                "from_bus": 30,
+                "to_bus": 41,
+                "z_series": {
+                    "R": 0.00735,
+                    "X": 0.04395
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0123
+                },
+                "name": "Line 30-41 ckt 1"
+            },
+            {
+                "from_bus": 5,
+                "to_bus": 18,
+                "z_series": {
+                    "R": 0.03133,
+                    "X": 0.07675
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0015
+                },
+                "name": "Line 5-18 ckt 1"
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 54,
+                "z_series": {
+                    "R": 0.00859,
+                    "X": 0.00472
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0214
+                },
+                "name": "Line 15-54 ckt 3"
+            },
+            {
+                "from_bus": 12,
+                "to_bus": 18,
+                "z_series": {
+                    "R": 0.02747,
+                    "X": 0.08909
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0019
+                },
+                "name": "Line 12-18 ckt 1"
+            },
+            {
+                "from_bus": 12,
+                "to_bus": 27,
+                "z_series": {
+                    "R": 0.0142,
+                    "X": 0.07557
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0695
+                },
+                "name": "Line 12-27 ckt 1"
+            },
+            {
+                "from_bus": 5,
+                "to_bus": 44,
+                "z_series": {
+                    "R": 0.03463,
+                    "X": 0.08253
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0016
+                },
+                "name": "Line 5-44 ckt 1"
+            },
+            {
+                "from_bus": 18,
+                "to_bus": 37,
+                "z_series": {
+                    "R": 0.01017,
+                    "X": 0.00559
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0253
+                },
+                "name": "Line 18-37 ckt 2"
+            },
+            {
+                "from_bus": 20,
+                "to_bus": 34,
+                "z_series": {
+                    "R": 0.02423,
+                    "X": 0.05862
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0011
+                },
+                "name": "Line 20-34 ckt 1"
+            },
+            {
+                "from_bus": 20,
+                "to_bus": 50,
+                "z_series": {
+                    "R": 0.0424,
+                    "X": 0.07509
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0008
+                },
+                "name": "Line 20-50 ckt 1"
+            },
+            {
+                "from_bus": 21,
+                "to_bus": 48,
+                "z_series": {
+                    "R": 0.01824,
+                    "X": 0.04236
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0075
+                },
+                "name": "Line 21-48 ckt 1"
+            },
+            {
+                "from_bus": 21,
+                "to_bus": 48,
+                "z_series": {
+                    "R": 0.01829,
+                    "X": 0.04246
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0078
+                },
+                "name": "Line 21-48 ckt 2"
+            },
+            {
+                "from_bus": 24,
+                "to_bus": 44,
+                "z_series": {
+                    "R": 0.03993,
+                    "X": 0.09965
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.002
+                },
+                "name": "Line 24-44 ckt 1"
+            },
+            {
+                "from_bus": 10,
+                "to_bus": 19,
+                "z_series": {
+                    "R": 0.0405,
+                    "X": 0.0953
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0021
+                },
+                "name": "Line 10-19 ckt 1"
+            },
+            {
+                "from_bus": 14,
+                "to_bus": 44,
+                "z_series": {
+                    "R": 0.04211,
+                    "X": 0.08545
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0474
+                },
+                "name": "Line 14-44 ckt 1"
+            },
+            {
+                "from_bus": 31,
+                "to_bus": 28,
+                "z_series": {
+                    "R": 0.00224,
+                    "X": 0.03268
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.35
+                },
+                "name": "Line 31-28 ckt 1"
+            },
+            {
+                "from_bus": 1,
+                "to_bus": 31,
+                "z_series": {
+                    "R": 0.00117,
+                    "X": 0.017
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.182
+                },
+                "name": "Line 1-31 ckt 1"
+            },
+            {
+                "from_bus": 29,
+                "to_bus": 41,
+                "z_series": {
+                    "R": 0.01868,
+                    "X": 0.1259
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0356
+                },
+                "name": "Line 29-41 ckt 1"
+            },
+            {
+                "from_bus": 56,
+                "to_bus": 29,
+                "z_series": {
+                    "R": 0.00771,
+                    "X": 0.0544
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0138
+                },
+                "name": "Line 56-29 ckt 1"
+            },
+            {
+                "from_bus": 30,
+                "to_bus": 32,
+                "z_series": {
+                    "R": 0.00225,
+                    "X": 0.0134
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.004
+                },
+                "name": "Line 30-32 ckt 1"
+            },
+            {
+                "from_bus": 54,
+                "to_bus": 55,
+                "z_series": {
+                    "R": 0.06246,
+                    "X": 0.08246
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0003
+                },
+                "name": "Line 54-55 ckt 1"
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 54,
+                "z_series": {
+                    "R": 0.00846,
+                    "X": 0.00465
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.021
+                },
+                "name": "Line 15-54 ckt 1"
+            },
+            {
+                "from_bus": 31,
+                "to_bus": 38,
+                "z_series": {
+                    "R": 0.00075,
+                    "X": 0.01092
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.117
+                },
+                "name": "Line 31-38 ckt 1"
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 54,
+                "z_series": {
+                    "R": 0.00855,
+                    "X": 0.0047
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0213
+                },
+                "name": "Line 15-54 ckt 2"
+            },
+            {
+                "from_bus": 33,
+                "to_bus": 50,
+                "z_series": {
+                    "R": 0.0502,
+                    "X": 0.101
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0025
+                },
+                "name": "Line 33-50 ckt 1"
+            },
+            {
+                "from_bus": 35,
+                "to_bus": 39,
+                "z_series": {
+                    "R": 0.01028,
+                    "X": 0.07253
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0176
+                },
+                "name": "Line 35-39 ckt 1"
+            },
+            {
+                "from_bus": 35,
+                "to_bus": 56,
+                "z_series": {
+                    "R": 0.01243,
+                    "X": 0.07847
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0192
+                },
+                "name": "Line 35-56 ckt 1"
+            },
+            {
+                "from_bus": 16,
+                "to_bus": 27,
+                "z_series": {
+                    "R": 0.00366,
+                    "X": 0.01312
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.046
+                },
+                "name": "Line 16-27 ckt 1"
+            }
+        ],
+        "transformers": [
+            {
+                "from_bus": 12,
+                "to_bus": 40,
+                "z_series": {
+                    "R": 0.00107,
+                    "X": 0.04039
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0042
+                },
+                "name": "Transformer 12-40 ckt 1",
+                "m0": 1.03125,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 12,
+                "to_bus": 40,
+                "z_series": {
+                    "R": 0.00107,
+                    "X": 0.04039
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0042
+                },
+                "name": "Transformer 12-40 ckt 2",
+                "m0": 1.03125,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 10,
+                "to_bus": 39,
+                "z_series": {
+                    "R": 0.00106,
+                    "X": 0.03949
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0041
+                },
+                "name": "Transformer 10-39 ckt 1",
+                "m0": 1.0124999,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 54,
+                "to_bus": 53,
+                "z_series": {
+                    "R": 0.00134,
+                    "X": 0.04988
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0004
+                },
+                "name": "Transformer 54-53 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.99,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 48,
+                "to_bus": 47,
+                "z_series": {
+                    "R": 0.00101,
+                    "X": 0.03925
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0035
+                },
+                "name": "Transformer 48-47 ckt 1",
+                "m0": 1.05,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 44,
+                "to_bus": 41,
+                "z_series": {
+                    "R": 0.00244,
+                    "X": 0.06829
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.006
+                },
+                "name": "Transformer 44-41 ckt 2",
+                "m0": 1.02125,
+                "m_min": 0.99,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 44,
+                "to_bus": 41,
+                "z_series": {
+                    "R": 0.0025,
+                    "X": 0.07144
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0045
+                },
+                "name": "Transformer 44-41 ckt 1",
+                "m0": 1.02125,
+                "m_min": 0.99,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 39,
+                "to_bus": 38,
+                "z_series": {
+                    "R": 0.00095,
+                    "X": 0.05116
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0124
+                },
+                "name": "Transformer 39-38 ckt 2",
+                "m0": 1.0,
+                "m_min": 0.51,
+                "m_max": 1.5,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 39,
+                "to_bus": 38,
+                "z_series": {
+                    "R": 0.00094,
+                    "X": 0.05107
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": -0.0127
+                },
+                "name": "Transformer 39-38 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.51,
+                "m_max": 1.5,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 33,
+                "to_bus": 32,
+                "z_series": {
+                    "R": 0.0025,
+                    "X": 0.0723
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "name": "Transformer 33-32 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 35,
+                "to_bus": 31,
+                "z_series": {
+                    "R": 0.00087,
+                    "X": 0.051
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "name": "Transformer 35-31 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 28,
+                "to_bus": 29,
+                "z_series": {
+                    "R": 0.00087,
+                    "X": 0.051
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "name": "Transformer 28-29 ckt 2",
+                "m0": 1.0,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 28,
+                "to_bus": 29,
+                "z_series": {
+                    "R": 0.00087,
+                    "X": 0.051
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "name": "Transformer 28-29 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            },
+            {
+                "from_bus": 1,
+                "to_bus": 40,
+                "z_series": {
+                    "R": 0.001,
+                    "X": 0.0623
+                },
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "name": "Transformer 1-40 ckt 1",
+                "m0": 1.0,
+                "m_min": 0.9,
+                "m_max": 1.1,
+                "m_step": 0.00625
+            }
+        ],
+        "capacitors": [
+            {
+                "from_bus": 40,
+                "to_bus": 0,
+                "name": "LineShunt 12-40 ckt 1 ID 1 @ 40",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0006,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 40,
+                "to_bus": 0,
+                "name": "LineShunt 12-40 ckt 2 ID 1 @ 40",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0006,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 38,
+                "to_bus": 0,
+                "name": "LineShunt 39-38 ckt 1 ID 1 @ 38",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0014000000000000002,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 38,
+                "to_bus": 0,
+                "name": "LineShunt 39-38 ckt 2 ID 1 @ 38",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0014000000000000002,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 41,
+                "to_bus": 0,
+                "name": "LineShunt 44-41 ckt 1 ID 1 @ 41",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0007000000000000001,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 41,
+                "to_bus": 0,
+                "name": "LineShunt 44-41 ckt 2 ID 1 @ 41",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0007000000000000001,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 47,
+                "to_bus": 0,
+                "name": "LineShunt 48-47 ckt 1 ID 1 @ 47",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0006,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 53,
+                "to_bus": 0,
+                "name": "LineShunt 54-53 ckt 1 ID 1 @ 53",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0004,
+                    "B": 0.0
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 13,
+                "to_bus": 0,
+                "name": "Switched Shunt 13-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.08
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 14,
+                "to_bus": 0,
+                "name": "Switched Shunt 14-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.07200000000000001
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 0,
+                "name": "Switched Shunt 15-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.126
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 16,
+                "to_bus": 0,
+                "name": "Switched Shunt 16-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.28800000000000003
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 17,
+                "to_bus": 0,
+                "name": "Switched Shunt 17-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.156
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 18,
+                "to_bus": 0,
+                "name": "Switched Shunt 18-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.18
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 20,
+                "to_bus": 0,
+                "name": "Switched Shunt 20-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.07200000000000001
+                },
+                "status": 1
+            },
+            {
+                "from_bus": 44,
+                "to_bus": 0,
+                "name": "Switched Shunt 44-1 [FIXED EXPORTED POSITION]",
+                "z_series": null,
+                "y_shunt": {
+                    "G": 0.0,
+                    "B": 0.0
+                },
+                "status": 1
+            }
+        ],
+        "generators": [
+            {
+                "from_bus": 28,
+                "to_bus": 0,
+                "name": "G28-1",
+                "z_series": {
+                    "R": 0.0,
+                    "X": 0.05
+                },
+                "y_shunt": null,
+                "V": 1.03,
+                "P": 1.5,
+                "Q": null,
+                "Qg_max": 0.6,
+                "Qg_min": -0.6,
+                "status": 1
+            },
+            {
+                "from_bus": 14,
+                "to_bus": 0,
+                "name": "G14-1",
+                "z_series": {
+                    "R": 0.00163,
+                    "X": 0.095
+                },
+                "y_shunt": null,
+                "V": 1.02,
+                "P": 0.1,
+                "Q": null,
+                "Qg_max": 0.05,
+                "Qg_min": 0.0,
+                "status": 1
+            },
+            {
+                "from_bus": 31,
+                "to_bus": 0,
+                "name": "G31-1",
+                "z_series": {
+                    "R": 0.0,
+                    "X": 0.05
+                },
+                "y_shunt": null,
+                "V": 1.03,
+                "P": 3.3592,
+                "Q": null,
+                "Qg_max": 1.2,
+                "Qg_min": -0.9,
+                "status": 1
+            },
+            {
+                "from_bus": 44,
+                "to_bus": 0,
+                "name": "G44-1",
+                "z_series": {
+                    "R": 0.004,
+                    "X": 0.127
+                },
+                "y_shunt": null,
+                "V": 1.02,
+                "P": 0.2,
+                "Q": null,
+                "Qg_max": 0.4,
+                "Qg_min": -0.2,
+                "status": 1
+            },
+            {
+                "from_bus": 28,
+                "to_bus": 0,
+                "name": "G28-2",
+                "z_series": {
+                    "R": 0.0,
+                    "X": 0.05
+                },
+                "y_shunt": null,
+                "V": 1.03,
+                "P": 1.5,
+                "Q": null,
+                "Qg_max": 0.6,
+                "Qg_min": -0.6,
+                "status": 1
+            },
+            {
+                "from_bus": 50,
+                "to_bus": 0,
+                "name": "G50-1",
+                "z_series": {
+                    "R": 0.0035,
+                    "X": 0.2
+                },
+                "y_shunt": null,
+                "V": 1.02,
+                "P": 0.38,
+                "Q": null,
+                "Qg_max": 0.33,
+                "Qg_min": -0.18,
+                "status": 1
+            },
+            {
+                "from_bus": 53,
+                "to_bus": 0,
+                "name": "G53-1",
+                "z_series": {
+                    "R": 0.00132,
+                    "X": 0.1
+                },
+                "y_shunt": null,
+                "V": 1.02,
+                "P": 1.0,
+                "Q": null,
+                "Qg_max": 0.45,
+                "Qg_min": 0.0,
+                "status": 1
+            },
+            {
+                "from_bus": 54,
+                "to_bus": 0,
+                "name": "G54-1",
+                "z_series": {
+                    "R": 0.00112,
+                    "X": 0.088
+                },
+                "y_shunt": null,
+                "V": 1.01,
+                "P": 0.0,
+                "Q": null,
+                "Qg_max": 0.0,
+                "Qg_min": 0.0,
+                "status": 0
+            },
+            {
+                "from_bus": 48,
+                "to_bus": 0,
+                "name": "G48-1",
+                "z_series": {
+                    "R": 0.00156,
+                    "X": 0.128
+                },
+                "y_shunt": null,
+                "V": 1.0,
+                "P": 0.16,
+                "Q": null,
+                "Qg_max": 0.26,
+                "Qg_min": -0.14,
+                "status": 1
+            }
+        ],
+        "loads": [
+            {
+                "from_bus": 3,
+                "to_bus": 0,
+                "name": "Load 3-1",
+                "P": 0.12300000000000001,
+                "Q": 0.05
+            },
+            {
+                "from_bus": 5,
+                "to_bus": 0,
+                "name": "Load 5-1",
+                "P": 0.14,
+                "Q": 0.032
+            },
+            {
+                "from_bus": 10,
+                "to_bus": 0,
+                "name": "Load 10-1",
+                "P": 0.168,
+                "Q": 0.025
+            },
+            {
+                "from_bus": 12,
+                "to_bus": 0,
+                "name": "Load 12-1",
+                "P": 0.22899999999999998,
+                "Q": 0.065
+            },
+            {
+                "from_bus": 13,
+                "to_bus": 0,
+                "name": "Load 13-1",
+                "P": 0.2,
+                "Q": 0.04
+            },
+            {
+                "from_bus": 14,
+                "to_bus": 0,
+                "name": "Load 14-1",
+                "P": 0.222,
+                "Q": 0.152
+            },
+            {
+                "from_bus": 15,
+                "to_bus": 0,
+                "name": "Load 15-1",
+                "P": 0.5820000000000001,
+                "Q": 0.363
+            },
+            {
+                "from_bus": 16,
+                "to_bus": 0,
+                "name": "Load 16-1",
+                "P": 0.578,
+                "Q": 0.40399999999999997
+            },
+            {
+                "from_bus": 17,
+                "to_bus": 0,
+                "name": "Load 17-1",
+                "P": 0.32799999999999996,
+                "Q": 0.129
+            },
+            {
+                "from_bus": 18,
+                "to_bus": 0,
+                "name": "Load 18-1",
+                "P": 0.45,
+                "Q": 0.12
+            },
+            {
+                "from_bus": 19,
+                "to_bus": 0,
+                "name": "Load 19-1",
+                "P": 0.183,
+                "Q": 0.05
+            },
+            {
+                "from_bus": 20,
+                "to_bus": 0,
+                "name": "Load 20-1",
+                "P": 0.153,
+                "Q": 0.05
+            },
+            {
+                "from_bus": 21,
+                "to_bus": 0,
+                "name": "Load 21-1",
+                "P": 0.7440000000000001,
+                "Q": 0.268
+            },
+            {
+                "from_bus": 24,
+                "to_bus": 0,
+                "name": "Load 24-1",
+                "P": 0.363,
+                "Q": 0.10400000000000001
+            },
+            {
+                "from_bus": 27,
+                "to_bus": 0,
+                "name": "Load 27-1",
+                "P": 0.2,
+                "Q": 0.06
+            },
+            {
+                "from_bus": 30,
+                "to_bus": 0,
+                "name": "Load 30-1",
+                "P": 0.23399999999999999,
+                "Q": 0.062
+            },
+            {
+                "from_bus": 33,
+                "to_bus": 0,
+                "name": "Load 33-1",
+                "P": 0.28,
+                "Q": 0.06
+            },
+            {
+                "from_bus": 34,
+                "to_bus": 0,
+                "name": "Load 34-1",
+                "P": 0.2274,
+                "Q": 0.03
+            },
+            {
+                "from_bus": 37,
+                "to_bus": 0,
+                "name": "Load 37-1",
+                "P": 0.27,
+                "Q": 0.03
+            },
+            {
+                "from_bus": 44,
+                "to_bus": 0,
+                "name": "Load 44-1",
+                "P": 0.598,
+                "Q": 0.12300000000000001
+            },
+            {
+                "from_bus": 48,
+                "to_bus": 0,
+                "name": "Load 48-1",
+                "P": 0.5579999999999999,
+                "Q": 0.125
+            },
+            {
+                "from_bus": 50,
+                "to_bus": 0,
+                "name": "Load 50-1",
+                "P": 0.141,
+                "Q": 0.03
+            },
+            {
+                "from_bus": 53,
+                "to_bus": 0,
+                "name": "Load 53-1",
+                "P": 0.595,
+                "Q": 0.278
+            },
+            {
+                "from_bus": 54,
+                "to_bus": 0,
+                "name": "Load 54-1",
+                "P": 0.1243,
+                "Q": 0.057300000000000004
+            },
+            {
+                "from_bus": 55,
+                "to_bus": 0,
+                "name": "Load 55-1",
+                "P": 0.22649999999999998,
+                "Q": 0.061500000000000006
+            },
+            {
+                "from_bus": 56,
+                "to_bus": 0,
+                "name": "Load 56-1",
+                "P": 0.14,
+                "Q": 0.037000000000000005
+            }
+        ],
+        "full_converters": [],
+        "external_grids": []
+    },
+    "tap_controllers": [
+        {
+            "name": "12-40",
+            "elements": [
+                "Transformer 12-40 ckt 1",
+                "Transformer 12-40 ckt 2"
+            ],
+            "reg_bus": 12,
+            "v_low": 1.015,
+            "v_high": 1.025,
+            "auto": true
+        },
+        {
+            "name": "10-39",
+            "elements": [
+                "Transformer 10-39 ckt 1"
+            ],
+            "reg_bus": 10,
+            "v_low": 1.015,
+            "v_high": 1.025,
+            "auto": true
+        },
+        {
+            "name": "48-47",
+            "elements": [
+                "Transformer 48-47 ckt 1"
+            ],
+            "reg_bus": 48,
+            "v_low": 1.015,
+            "v_high": 1.025
+        },
+        {
+            "name": "44-41",
+            "elements": [
+                "Transformer 44-41 ckt 2",
+                "Transformer 44-41 ckt 1"
+            ],
+            "reg_bus": 44,
+            "v_low": 1.0,
+            "v_high": 1.02
+        },
+        {
+            "name": "33-32",
+            "elements": [
+                "Transformer 33-32 ckt 1"
+            ],
+            "reg_bus": 33,
+            "v_low": 0.99,
+            "v_high": 1.0
+        },
+        {
+            "name": "35-31",
+            "elements": [
+                "Transformer 35-31 ckt 1"
+            ],
+            "reg_bus": 35,
+            "v_low": 0.99,
+            "v_high": 1.0
+        },
+        {
+            "name": "28-29",
+            "elements": [
+                "Transformer 28-29 ckt 2",
+                "Transformer 28-29 ckt 1"
+            ],
+            "reg_bus": 28,
+            "v_low": 0.99,
+            "v_high": 1.0
+        },
+        {
+            "name": "1-40",
+            "elements": [
+                "Transformer 1-40 ckt 1"
+            ],
+            "reg_bus": 1,
+            "v_low": 0.99,
+            "v_high": 1.0
+        }
+    ]
+}

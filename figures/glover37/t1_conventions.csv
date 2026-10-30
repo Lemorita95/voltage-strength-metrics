@@ -1,0 +1,5 @@
+metric,network,evaluated_at,definition,interaction,denominator,source
+SCR,37-bus (no IBR),"host bus, 69 kV",$S_i / P_i$,none,rated MW,IEEE 2800-2022
+WSCR,37-bus (no IBR),"host bus, 69 kV","$\sum_i S_i P_i \,/\, (\sum_i P_i)^2$",weights $P_i$,rated MW,IEEE 2800-2022
+ESCR,46-bus (with IBR),"padmount, 34.5 kV","$S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$",$\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$,rated MW,"CIGRE multi-infeed brochure, eq. (1-4), $Q_f = 0$"
+SDSCR,46-bus (with IBR),"converter terminal, 0.69 kV","$|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$","$w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$",rated MW,Wu et al. (2018)

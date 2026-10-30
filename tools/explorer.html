@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fault Strength Explorer</title>
+<!--
+  Data-free viewer for results written by experiments/glover37/simulate.py.
+  Reads metrics_timeseries.csv, metric_variables.csv, run_summary.csv and (optional)
+  dispatch_schedule.csv at runtime; nothing is embedded.
+
+  Open it with:   python tools/explorer.py   (serves the repo on localhost and opens this page)
+  Query options:  ?run=<folder>      results folder, relative to this page
+                                     (default ../results/glover37/raw/)
+                  ?compare=<folder>  a second run, drawn dotted on the metric chart
+  Opened by double-click (file://), browsers do not let the page read the CSVs: use
+  "Choose results folder" and pick results/glover37/raw instead.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one working surface. Controls, then the operating point and the selected metric on one
+   shared time axis, its terms beneath, the hour inspector to the side. Light paper palette always;
+   colour only where it carries meaning. */
+:root {
+  --bg: #f7f6f3; --surface: #fbfaf8; --ink: #2b2f36; --muted: #767b83; --faint: #a4a8ae;
+  --rule: #e4e1db; --grid: #eeebe6; --accent: #4a6382;
+  --c1: #9a7459; --c2: #5f8270; --c3: #75719a; --c4: #8c8256; --c5: #9a6674;
+  --gs-reg: #a9b8cb; --gs-max: #dcc49a; --gs-min: #b3cdc4; --gs-off: #efede9;
+  --under: #b07a68; --over: #b89a62; --switch: #8f7394;
+  --band: rgba(74, 99, 130, .07);
+  --m-scr: #4a6382; --m-wscr: #9a9ea5; --m-escr: #b08a52; --m-sdscr: #4f8a8b;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #16181c; --surface: #1b1e23; --ink: #d8dadd; --muted: #8b9098; --faint: #5d626a;
+  --rule: #2a2e34; --grid: #22262c; --accent: #8ea5c2;
+  --c1: #c39b7c; --c2: #8fb3a0; --c3: #a6a2c8; --c4: #c2b682; --c5: #c890a0;
+  --gs-reg: #4a5c76; --gs-max: #7f6a43; --gs-min: #44665d; --gs-off: #22262c;
+  --under: #c9917f; --over: #c9ae7c; --switch: #b39bb8;
+  --band: rgba(142, 165, 194, .08);
+  --m-scr: #8ea5c2; --m-wscr: #7d828a; --m-escr: #d0ad74; --m-sdscr: #7fbcbc; color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html { -webkit-text-size-adjust: 100% }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14.5px/1.5 var(--sans) }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px }
+@media (max-width: 600px) { .wrap { padding: 22px 16px 48px } }
+
+header { display: flex; flex-wrap: wrap; gap: 10px 32px; align-items: baseline; justify-content: space-between; padding-bottom: 16px; border-bottom: 1px solid var(--rule) }
+h1 { font-weight: 500; font-size: 22px; letter-spacing: -.01em; margin: 0 }
+.source { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font: 400 12px var(--mono); color: var(--muted) }
+.source b { color: var(--ink); font-weight: 400 }
+.link { font: 500 12.5px var(--sans); color: var(--accent); background: none; border: 0; padding: 2px 0; cursor: pointer; border-bottom: 1px solid transparent }
+.link:hover { border-bottom-color: currentColor }
+.status { margin-top: 18px; color: var(--muted); font-size: 14px; max-width: 80ch }
+.status.err { color: var(--under) }
+.status code, footer code { font: 12.5px var(--mono); color: var(--ink) }
+#app[hidden] { display: none }
+
+.controls { display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: flex-end; padding: 18px 0 8px }
+.group { display: flex; flex-direction: column; gap: 4px }
+.label { font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint) }
+.tabs { display: inline-flex; gap: 20px; flex-wrap: wrap }
+.tabs button { font: 500 13.5px var(--sans); color: var(--muted); background: none; border: 0; padding: 3px 0 5px; cursor: pointer; border-bottom: 1.5px solid transparent }
+.tabs button:hover { color: var(--ink) }
+.tabs button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink) }
+.chips { display: flex; flex-wrap: wrap; gap: 14px }
+.chip { font: 500 13px var(--mono); display: inline-flex; align-items: center; gap: 7px; padding: 3px 0 5px; border: 0; background: none; color: var(--ink); cursor: pointer }
+.chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block }
+.chip[aria-pressed="false"] { color: var(--faint) }
+.chip[aria-pressed="false"] i { opacity: .35 }
+select.pick { font: 500 13.5px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 3px; padding: 4px 6px; max-width: 260px }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; padding-bottom: 5px }
+.toggle.disabled { opacity: .5; cursor: default }
+.tabs button:focus-visible, .chip:focus-visible, .link:focus-visible, input:focus-visible { outline: 1.5px solid var(--accent); outline-offset: 3px; border-radius: 2px }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 32px; align-items: start; padding-top: 10px }
+@media (max-width: 960px) { .grid { grid-template-columns: minmax(0, 1fr) } }
+.stack { display: flex; flex-direction: column; gap: 26px; min-width: 0 }
+section.fig { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.fig-head { display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px }
+h2 { font-weight: 500; font-size: 15.5px; margin: 0 }
+.formula { font-size: 12.5px; color: var(--muted); max-width: 80ch }
+.formula:empty { display: none }
+.key { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--muted) }
+.key span { display: inline-flex; align-items: center; gap: 7px }
+.sw { width: 18px; height: 0; border-top: 1.5px solid currentColor; display: inline-block }
+.sw.dash { border-top-style: dashed } .sw.dot { border-top-style: dotted; border-top-width: 2px }
+.blk { width: 12px; height: 9px; display: inline-block; border-radius: 1.5px }
+.chart { width: 100%; min-width: 0 }
+.small-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 28px }
+@media (max-width: 700px) { .small-grid { grid-template-columns: minmax(0, 1fr) } }
+.multiples { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 26px 24px }
+.rows { display: flex; flex-direction: column; gap: 22px }
+.tablewrap { overflow-x: auto; margin-top: 18px }
+table.mins th:nth-child(2), table.mins td:nth-child(2) { text-align: left }
+table.mins tbody tr.first td { border-top: 1px solid var(--rule) }
+.small h3 { font-weight: 500; font-size: 13.5px; margin: 0 }
+.small p { margin: 2px 0 8px; font-size: 12px; color: var(--muted) }
+
+aside.inspector { position: sticky; top: 16px; border-left: 1px solid var(--rule); padding-left: 22px }
+@media (max-width: 960px) { aside.inspector { position: static; border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); padding-top: 16px } }
+.insp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.insp-head h2 { font-size: 15px }
+.pin { font: 11.5px var(--mono); color: var(--faint) }
+.when { font: 12.5px var(--mono); color: var(--muted); margin: 6px 0 10px }
+.hint { color: var(--muted); font-size: 13px; margin: 8px 0 0 }
+table.kv { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums }
+table.kv th, table.kv td { padding: 4px 2px; text-align: right; border-bottom: 1px solid var(--grid); font-weight: 400 }
+table.kv th:first-child, table.kv td:first-child { text-align: left; color: var(--muted) }
+table.kv thead th { font: 500 11px var(--mono); color: var(--faint) }
+.sec { font: 500 10.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin: 16px 0 6px }
+.notes { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--muted); margin-top: 10px }
+.notes b { color: var(--ink); font-weight: 500 }
+.notes .warn { color: var(--under) } .notes .hot { color: var(--over) } .notes .swc { color: var(--switch) }
+footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 12.5px; max-width: 82ch; display: flex; flex-direction: column; gap: 7px }
+footer b { color: var(--ink); font-weight: 500 }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fault Strength Explorer</h1>
+    <div class="source">
+      <span>run <b id="src-run">—</b></span>
+      <span id="src-cmp-wrap" hidden>compare <b id="src-cmp">—</b></span>
+      <button class="link" id="reload" type="button">Reload</button>
+      <label class="link" for="pick-run">Choose results folder</label>
+      <input type="file" id="pick-run" webkitdirectory directory multiple hidden>
+      <label class="link" for="pick-cmp">Choose comparison folder</label>
+      <input type="file" id="pick-cmp" webkitdirectory directory multiple hidden>
+    </div>
+  </header>
+
+  <p id="status" class="status">Loading results…</p>
+
+  <div id="app" hidden>
+    <div class="controls" role="group" aria-label="View controls">
+      <div class="group"><span class="label">Case</span><div style="display:flex;gap:14px;align-items:center">
+        <select class="pick" id="case" aria-label="Case"></select>
+        <label class="toggle" id="overlay-toggle" for="overlay"><input type="checkbox" id="overlay"> with intact</label></div></div>
+      <div class="group"><span class="label">Commitment</span><div class="tabs" id="commitment"></div></div>
+      <div class="group"><span class="label">Metric</span><div class="tabs" id="metric"></div></div>
+      <div class="group" id="variant-group"><span class="label">ESCR interaction factor</span><select class="pick" id="variant" aria-label="ESCR interaction factor"></select></div>
+      <div class="group"><span class="label">IBR sites</span><div class="chips" id="sites"></div></div>
+      <label class="toggle" id="cmp-toggle" for="cmp"><input type="checkbox" id="cmp"> comparison run</label>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <section class="fig">
+          <div class="fig-head"><h2>Operating point</h2><span class="formula">Load scale over the run, with hours outside the voltage band</span></div>
+          <div id="ctx" class="chart"></div>
+          <div class="key" id="ctx-key"></div>
+        </section>
+        <section class="fig" id="sec-gen">
+          <div class="fig-head"><h2>Generator control</h2><span class="formula" id="gen-note"></span></div>
+          <div id="gen" class="chart"></div>
+          <div class="key" id="gen-key"></div>
+        </section>
+        <section class="fig" id="sec-main">
+          <div class="fig-head"><h2 id="metric-title">—</h2></div>
+          <div id="main" class="chart"></div>
+          <div class="key" id="main-key"></div>
+        </section>
+        <section class="fig" id="sec-cmp-rel" hidden>
+          <div class="fig-head"><h2 id="cmp-rel-title">Relative to its own median</h2><span class="formula" id="cmp-rel-note"></span><div class="tabs" id="cmp-scale" role="group" aria-label="Scale"></div></div>
+          <div class="multiples" id="cmp-rel"></div>
+          <div class="key" id="cmp-rel-key"></div>
+        </section>
+        <section class="fig" id="sec-cmp-min" hidden>
+          <div class="fig-head"><h2>Where each metric is lowest</h2><span class="formula">Dot: the hour of each metric's minimum. Ticks: its lowest 10 % of hours, a display aid and not a screening criterion. Where the metrics agree on when a site is weakest, the dots line up vertically.</span></div>
+          <div class="rows" id="cmp-min"></div>
+          <div class="key" id="cmp-min-key"></div>
+          <div class="tablewrap" id="cmp-min-table"></div>
+        </section>
+        <section class="fig" id="sec-terms">
+          <div class="fig-head"><h2>Terms</h2><span class="formula" id="drv-note"></span></div>
+          <div class="small-grid" id="drivers"></div>
+        </section>
+      </div>
+      <aside class="inspector" aria-live="polite">
+        <div class="insp-head"><h2>Hour</h2><span class="pin" id="pin">hover a chart · click to pin</span></div>
+        <div id="insp"></div>
+      </aside>
+    </div>
+
+    <footer>
+      <div><b>How values are built.</b> SCMVA<sub>i</sub> = 100·|I<sub>f,i</sub>| (V<sub>n</sub> = 1 pu) from a bolted fault solved by the short-circuit solver at the actual pre-fault state; converters hold their pre-fault current, so they add no fault current. Impedances come from the solver's admittance builder (passive network, generator and load admittances). Every plant runs at rated output, and every denominator uses rated MW. SCR and WSCR use the network without IBRs at the host (POI) buses. ESCR is CIGRE's multi-infeed ESCR at the 34.5 kV padmount buses, SCMVA<sub>i</sub> / (P<sub>i</sub> + Σ MIIF<sub>ji</sub> P<sub>j</sub>), with Q<sub>f</sub> = 0. SDSCR uses the 0.69 kV converter terminals with complex coupling weights (Wu 2018).</div>
+      <div><b>ESCR interaction factor.</b> MIIF<sub>ji</sub> = ΔV<sub>j</sub>/ΔV<sub>i</sub> for a disturbance at bus i. <i>Impedance</i> (the reference, CIGRE's instant response): |Z<sub>ji</sub>/Z<sub>ii</sub>|. <i>Probe 0.5 / 1 / 2 %</i>: a power-flow voltage step at bus i with generators holding their voltage and taps frozen, i.e. the response after voltage control has acted; an ideal voltage-controlled generator decouples the sites on either side of it.</div>
+      <div><b>Commitment.</b> <i>Unit commitment rule</i>: units committed by MWMax as load rises (E1 intact, E2 outages, commitment held). <i>All generators on line</i>: every unit on line at max(MWMin, s·MWMax), s set to meet the load, rule (a) (E5, intact only).</div>
+      <div>Generator modes are from the network with IBRs. Sites pair the SCR, ESCR and SDSCR buses in the order the runner writes them. Voltage flags come from the run's voltage preset and are reported, not corrected. No threshold lines are drawn.</div>
+    </footer>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ================= loading ================= */
+const FILES = ['metrics_timeseries.csv', 'metric_variables.csv', 'run_summary.csv'];
+const OPTIONAL = ['dispatch_schedule.csv'];
+const params = new URLSearchParams(location.search);
+const DEFAULT_RUN = '../results/glover37/raw/';
+const source = { run: params.get('run') || DEFAULT_RUN, compare: params.get('compare'), runFiles: null, cmpFiles: null };
+const slash = d => d.replace(/\/?$/, '/');
+
+function parseCSV(text) {
+  const rows = []; let row = [], field = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(field); field = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); field = ''; if (row.length > 1 || row[0] !== '') rows.push(row); row = [];
+    } else field += ch;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  const head = rows.shift() || [];
+  return rows.map(r => { const o = {}; head.forEach((h, k) => { const v = r[k] ?? ''; const n = v === '' ? NaN : Number(v); o[h] = v === '' ? null : (isFinite(n) ? n : v); }); return o; });
+}
+async function readFromUrl(dir) {
+  const out = {};
+  for (const f of FILES) {
+    const r = await fetch(slash(dir) + f, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
+    out[f] = parseCSV(await r.text());
+  }
+  for (const f of OPTIONAL) {
+    try { const r = await fetch(slash(dir) + f, { cache: 'no-store' }); if (r.ok) out[f] = parseCSV(await r.text()); } catch (e) {}
+  }
+  return out;
+}
+async function readFromPicker(fileList) {
+  const byName = {}; for (const f of fileList) byName[f.name] = f;
+  const out = {};
+  for (const f of FILES) { if (!byName[f]) throw new Error(`${f} not found in the chosen folder`); out[f] = parseCSV(await byName[f].text()); }
+  for (const f of OPTIONAL) if (byName[f]) out[f] = parseCSV(await byName[f].text());
+  return out;
+}
+function folderName(fileList) { const p = fileList[0] && fileList[0].webkitRelativePath; return p ? p.split('/')[0] : 'chosen folder'; }
+
+/* ================= data model (built from the CSVs) ================= */
+const MAG_VARS = new Set(['v_pf', 'z_ii', 'z_rr', 'w_complex']);
+const busList = v => v == null ? [] : String(v).split(';').map(x => x.trim().replace(/\.0+$/, '')).filter(Boolean);
+
+/* One view of the run: the states of one commitment rule (sequential: E1 intact, E2 outages;
+   all_online: E5, intact only), with ESCR through one MIIF variant. The ESCR terms shared by
+   every variant are written with the reference rows, the probe audit terms with AUDITED_PROBE.
+   Runs without these columns pass through unchanged. */
+const REFERENCE_VARIANT = 'impedance', AUDITED_PROBE = 'probe_0.01';
+const COMMITMENTS = [['sequential', 'Unit commitment rule'], ['all_online', 'All generators on line']];
+const VARIANTS = [['impedance', 'Impedance (CIGRE)'], ['probe_0.005', 'Probe 0.5 %'],
+                  ['probe_0.01', 'Probe 1 %'], ['probe_0.02', 'Probe 2 %']];
+const SHARED_TERMS = new Set(['scmva', 'rated_mw', 'z_ii', 'v_pf']);
+function referenceView(files, commitment, variant) {
+  commitment = commitment || 'sequential'; variant = variant || REFERENCE_VARIANT;
+  const rule = r => r.commitment == null || r.commitment === commitment;
+  const own = r => r.variant == null || r.variant === variant;
+  const out = { ...files };
+  out['metrics_timeseries.csv'] = files['metrics_timeseries.csv'].filter(r => rule(r) && own(r));
+  out['metric_variables.csv'] = files['metric_variables.csv'].filter(r => rule(r) && (
+    r.variant == null ||                                                  // SCR, WSCR, SDSCR
+    (r.variant === variant && !SHARED_TERMS.has(r.variable)) ||           // this MIIF and its audit
+    (r.variant === REFERENCE_VARIANT && SHARED_TERMS.has(r.variable)) ||  // terms every variant shares
+    (r.variant === AUDITED_PROBE && variant !== AUDITED_PROBE && r.variable !== 'if_magnitude')));
+  out['run_summary.csv'] = files['run_summary.csv'].filter(rule);
+  if (files['dispatch_schedule.csv']) out['dispatch_schedule.csv'] = files['dispatch_schedule.csv'].filter(rule);
+  return out;
+}
+
+function build(files) {
+  files = referenceView(files, st.commitment, st.variant);
+  const M = files['metrics_timeseries.csv'], V = files['metric_variables.csv'], S = files['run_summary.csv'];
+  const DS = files['dispatch_schedule.csv'] || null;
+  const caseOrder = []; [...S, ...M].forEach(r => { if (!caseOrder.includes(r.case)) caseOrder.push(r.case); });
+  caseOrder.sort((a, b) => (a === 'intact' ? -1 : b === 'intact' ? 1 : 0));
+  const hours = [...new Set(S.map(r => r.hour_index))].sort((a, b) => a - b);
+  const N = hours.length ? hours[hours.length - 1] + 1 : 0;
+  const ts = new Array(N).fill(null);
+  S.filter(r => r.case === caseOrder[0]).forEach(r => { ts[r.hour_index] = String(r.timestamp); });
+  const arr = () => new Array(N).fill(null);
+
+  const metrics = {}, busOrder = {};
+  M.forEach(r => {
+    const b = String(r.bus);
+    ((metrics[r.case] ??= {})[r.metric] ??= {})[b] ??= arr();
+    metrics[r.case][r.metric][b][r.hour_index] = r.value;
+    const o = (busOrder[r.metric] ??= []); if (!o.includes(b)) o.push(b);
+  });
+  const vars = {};
+  V.forEach(r => {
+    const key = r.related_bus == null ? String(r.bus) : `${r.bus}>${r.related_bus}`;
+    const blk = (((vars[r.case] ??= {})[r.metric] ??= {})[r.variable] ??= {});
+    (blk[key] ??= arr())[r.hour_index] = MAG_VARS.has(r.variable) ? r.magnitude : r.real;
+  });
+  const summary = {};
+  S.forEach(r => { const blk = (summary[r.case] ??= {}); for (const k in r) { (blk[k] ??= arr())[r.hour_index] = r[k]; } });
+
+  // generator control mode per case, network ('base' = without IBRs, 'ibr' = with IBRs) and hour:
+  // off (not committed) / reg (holds its bus voltage) / max (at Qmax) / min (at Qmin)
+  const gens = {};
+  caseOrder.forEach(c => ['base', 'ibr'].forEach(net => {
+    const qmax = (summary[c] || {})[`${net}_gens_at_qmax`] || arr(), qmin = (summary[c] || {})[`${net}_gens_at_qmin`] || arr();
+    const units = new Map();
+    if (DS) DS.filter(r => r.case === c && r.network === net).forEach(r => {
+      const name = String(r.generator).split('.').pop().toUpperCase();
+      if (!units.has(name)) units.set(name, { name, bus: String(r.bus), on: arr() });
+      units.get(name).on[r.hour_index] = !!r.committed;
+    });
+    else for (let h = 0; h < N; h++) [...busList(qmax[h]), ...busList(qmin[h])].forEach(b => {
+      if (!units.has('G' + b)) units.set('G' + b, { name: 'G' + b, bus: b, on: new Array(N).fill(true) });
+    });
+    (gens[c] ??= {})[net] = [...units.values()].sort((a, b) => Number(a.bus) - Number(b.bus) || a.name.localeCompare(b.name)).map(u => ({
+      ...u, mode: u.on.map((on, h) => !on ? 'off' : busList(qmax[h]).includes(u.bus) ? 'max' : busList(qmin[h]).includes(u.bus) ? 'min' : 'reg'),
+    }));
+  }));
+
+  // sites: SCR / ESCR / SDSCR buses paired by the order the runner writes them
+  const first = (c, m, v, b) => { const a = ((vars[c] || {})[m] || {})[v]; const s = a && a[String(b)]; return s ? s.find(x => x != null) : null; };
+  const c0 = caseOrder[0];
+  const n = Math.max(...['SCR', 'ESCR', 'SDSCR'].map(m => (busOrder[m] || []).length), 0);
+  const sites = [];
+  for (let k = 0; k < n; k++) {
+    const poi = (busOrder.SCR || [])[k], escr = (busOrder.ESCR || [])[k], sdscr = (busOrder.SDSCR || [])[k];
+    sites.push({ id: k, label: poi || escr || sdscr, poi, escr, sdscr, color: `--c${(k % 5) + 1}`,
+      rated: first(c0, 'SCR', 'rated_mw', poi) ?? first(c0, 'ESCR', 'rated_mw', escr) });
+  }
+  return { N, T: ts, cases: caseOrder, metrics, vars, summary, sites, gens, hasDispatch: !!DS,
+           metricList: ['SCR', 'WSCR', 'ESCR', 'SDSCR'].filter(m => caseOrder.some(c => (metrics[c] || {})[m])),
+           counts: { metrics: M.length, variables: V.length, states: S.length } };
+}
+function buildCompare(files) {
+  // same commitment rule and ESCR variant as the main view
+  const M = referenceView(files, st.commitment, st.variant)['metrics_timeseries.csv']; const out = {};
+  M.forEach(r => { ((out[r.case] ??= {})[r.metric] ??= {})[String(r.bus)] ??= []; out[r.case][r.metric][String(r.bus)][r.hour_index] = r.value; });
+  return out;
+}
+
+/* ================= helpers ================= */
+let D = null, CMP = null, RAW = null, CMP_RAW = null;
+const IF_ZERO = 1e-3;   // an interaction factor below this is treated as zero
+const CASE_LABEL = c => {
+  if (c === 'intact') return 'Intact';
+  const m = /^line_(\d+)_(\d+)(?:_ckt(\d+))?_out$/.exec(c);
+  return m ? `Line ${m[1]}–${m[2]}${m[3] ? ' ckt ' + m[3] : ''} out` : c.replace(/_/g, ' ');
+};
+const CASE_SHORT = c => c === 'intact' ? 'intact' : 'outage';
+const MET = {
+  SCR:   { key: 'poi',   f: 'SCR_i = SCMVA_i / P_rated,i · network without IBRs, POI' },
+  WSCR:  { key: 'poi',   f: 'WSCR = Σ SCMVA_i·P_op,i / (Σ P_op,i)² · one value for the group' },
+  ESCR:  { key: 'escr',  f: 'ESCR_i = SCMVA_i / (P_rated,i + Σ IF_j←i·P_rated,j) · MV bus' },
+  SDSCR: { key: 'sdscr', f: 'SDSCR_i = |V_i|² / (|Z_ii|·|P_i + Σ w_ij P_j|) · converter terminal' },
+};
+const MODE_WORD = { off: 'not committed', min: 'at Qmin', max: 'at Qmax', reg: 'regulating voltage' };
+const st = { case: null, metric: 'ESCR', sites: null, cmp: false, cmpScale: 'rel', hour: null, pinned: false,
+             commitment: 'sequential', variant: REFERENCE_VARIANT };
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (x, d = 2) => x == null || !isFinite(x) ? '—' : Number(x).toFixed(d);
+const vars = (c, m, v) => ((D.vars[c] || {})[m] || {})[v] || {};
+const sum = (c, k) => (D.summary[c] || {})[k] || [];
+const hoursIdx = () => D.T.map((_, i) => i);
+const idxWhere = (a, f) => { const o = []; (a || []).forEach((x, i) => { if (x != null && f(x)) o.push(i); }); return o; };
+// one case, or an outage drawn dashed over the intact network ("with intact")
+const casesShown = () => (st.overlay && st.case !== D.cases[0]) ? [D.cases[0], st.case] : [st.case];
+const single = () => casesShown().length === 1;
+const dashFor = c => (!single() && c !== D.cases[0]) ? 'dash' : 'solid';
+const shownSites = () => D.sites.filter(s => st.sites.has(s.id));
+const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const dayTime = t => { const d = new Date(String(t).replace(' ', 'T')); return `${WEEKDAY[d.getDay()]} ${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:00`; };
+function rgba(color, a) {
+  const c = color.trim();
+  if (c.startsWith('#')) { const h = c.length === 4 ? c.slice(1).split('').map(x => x + x).join('') : c.slice(1, 7); const n = parseInt(h, 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+  const m = c.match(/rgba?\(([^)]+)\)/); if (m) { const [r, g, b] = m[1].split(',').map(Number); return `rgba(${r},${g},${b},${a})`; }
+  return c;
+}
+function shiftTime(t, minutes) {
+  const d = new Date(String(t).replace(' ', 'T')); d.setMinutes(d.getMinutes() + minutes);
+  const p = x => String(x).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
+}
+function runs(idx) { const out = []; idx.forEach(i => { const l = out[out.length - 1]; if (l && i === l[1] + 1) l[1] = i; else out.push([i, i]); }); return out; }
+function switchHours(c) {
+  const pc = vars(c, 'ESCR', 'probe_pv_changes'); const o = [];
+  for (let i = 0; i < D.N; i++) if (Object.values(pc).some(a => (a[i] || 0) > 0)) o.push(i);
+  return o;
+}
+function zeroIFHours(c) {
+  const IF = Object.values(vars(c, 'ESCR', 'if_magnitude'));
+  if (!IF.length) return [];
+  return idxWhere(D.T.map((_, h) => { const v = IF.map(a => a[h]).filter(x => x != null); return v.length ? Math.max(...v) : null; }), x => x < IF_ZERO);
+}
+function escrDen(c, s) {
+  const IF = vars(c, 'ESCR', 'if_magnitude');
+  return D.T.map((_, h) => {
+    if (s.rated == null) return null;
+    let d = s.rated;
+    for (const o of D.sites) if (o.id !== s.id) { const a = IF[`${o.escr}>${s.escr}`]; if (!a || a[h] == null || o.rated == null) return null; d += a[h] * o.rated; }
+    return d;
+  });
+}
+const escrCeiling = (c, s) => (vars(c, 'ESCR', 'scmva')[s.escr] || []).map(x => x != null && s.rated ? x / s.rated : null);
+const escrBurden = (c, s) => escrDen(c, s).map(d => d != null && s.rated != null ? d - s.rated : null);
+function sdscrPeff(c, s) {
+  const v = vars(c, 'SDSCR', 'v_pf')[s.sdscr] || [], z = vars(c, 'SDSCR', 'z_rr')[`${s.sdscr}>${s.sdscr}`] || [], val = ((D.metrics[c] || {}).SDSCR || {})[s.sdscr] || [];
+  return D.T.map((_, h) => (v[h] && z[h] && val[h]) ? 100 * v[h] * v[h] / (z[h] * val[h]) : null);
+}
+function bandShapes(idx) {
+  return runs(idx).map(([a, b]) => ({ type: 'rect', xref: 'x', yref: 'paper', y0: 0, y1: 1, layer: 'below', line: { width: 0 },
+    x0: shiftTime(D.T[a], -30), x1: shiftTime(D.T[b], 30), fillcolor: css('--band') }));
+}
+const zeroBands = () => (single() && st.metric === 'ESCR') ? bandShapes(zeroIFHours(st.case)) : [];
+
+/* ================= plotting ================= */
+function baseLayout(h, yTitle, extra) {
+  const muted = css('--muted'), faint = css('--faint'), grid = css('--grid'), rule = css('--rule');
+  return Object.assign({
+    height: h, margin: { l: 56, r: 10, t: 6, b: 34 },
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: css('--sans'), size: 11.5, color: muted },
+    xaxis: { type: 'date', showgrid: false, linecolor: rule, tickcolor: rule, ticklen: 4, zeroline: false, tickformat: '%a %d', hoverformat: '%a %d %b, %H:%M', tickfont: { color: faint } },
+    yaxis: { title: { text: yTitle, font: { size: 11, color: faint } }, gridcolor: grid, showline: false, zeroline: false, automargin: true, tickfont: { color: faint }, nticks: 5 },
+    hovermode: 'x unified', hoverlabel: { bgcolor: css('--surface'), bordercolor: rule, font: { color: css('--ink'), family: css('--mono'), size: 11 } },
+    showlegend: false,
+  }, extra || {});
+}
+function cursorShape() {
+  if (st.hour == null) return [];
+  return [{ type: 'line', xref: 'x', yref: 'paper', x0: D.T[st.hour], x1: D.T[st.hour], y0: 0, y1: 1, layer: 'above',
+            line: { color: css('--faint'), width: 1, dash: st.pinned ? 'solid' : 'dot' } }];
+}
+const CFG = { displayModeBar: false, responsive: true };
+let charts = [];
+function plot(id, traces, layout, staticShapes) {
+  const el = document.getElementById(id); if (!el) return;
+  el._static = staticShapes || [];
+  layout.shapes = el._static.concat(cursorShape());
+  Plotly.react(el, traces, layout, CFG);
+  if (!el._wired) {
+    el._wired = true;
+    const hourOf = e => { const p = e.points && e.points[0]; return p && p.customdata != null ? Number(p.customdata) : null; };
+    el.on('plotly_hover', e => { const h = hourOf(e); if (!st.pinned && h != null) setHour(h); });
+    el.on('plotly_click', e => { const h = hourOf(e); if (h != null) { st.pinned = !(st.pinned && st.hour === h); setHour(h); } });
+  }
+  if (!charts.includes(el)) charts.push(el);
+}
+function line(y, name, color, dash, width, extra) {
+  return Object.assign({ x: D.T, y, name, type: 'scatter', mode: 'lines', customdata: hoursIdx(),
+    line: { color, width: width || 1.5, dash: dash || 'solid' }, hovertemplate: '%{y:.3f}<extra>' + name + '</extra>' }, extra || {});
+}
+
+/* ---- operating point: load and voltage-band flags ---- */
+function drawContext() {
+  const cs = casesShown();
+  const lam = sum(D.cases[0], 'load_scale');
+  const tr = [line(lam, 'load scale', css('--ink'), 'solid', 1.4, { hovertemplate: '%{y:.3f}<extra>load scale</extra>' })];
+  const flags = [];
+  cs.forEach(c => {
+    const tag = cs.length > 1 ? ` · ${CASE_SHORT(c)}` : '';
+    flags.push({ name: 'under-voltage, network without IBRs' + tag, color: '--under', idx: idxWhere(sum(c, 'base_n_under_v'), x => x > 0) });
+    flags.push({ name: 'over-voltage, network with IBRs' + tag, color: '--over', idx: idxWhere(sum(c, 'ibr_n_over_v'), x => x > 0) });
+  });
+  const vals = lam.filter(x => x != null);
+  const lo = vals.length ? Math.min(...vals) : 0, hi = vals.length ? Math.max(...vals) : 1, step = (hi - lo || 1) * 0.1;
+  flags.forEach((r, k) => {
+    const y = lo - step * (k + 1.3);
+    tr.push({ x: r.idx.map(i => D.T[i]), y: r.idx.map(() => y), customdata: r.idx, type: 'scatter', mode: 'markers', name: r.name,
+      marker: { symbol: 'line-ns-open', size: 8, color: css(r.color), line: { width: 1.5, color: css(r.color) } }, hovertemplate: r.name + '<extra></extra>' });
+  });
+  const lay = baseLayout(250, 'λ');
+  lay.yaxis.range = [lo - step * (flags.length + 1.8), hi + step * 0.6];
+  plot('ctx', tr, lay);
+  document.getElementById('ctx-key').innerHTML =
+    '<span><i class="sw" style="color:var(--ink)"></i>load scale</span>' +
+    [['--under', 'under-voltage, network without IBRs (SCR, WSCR)'], ['--over', 'over-voltage, network with IBRs (ESCR, SDSCR)']]
+      .map(([v, t]) => `<span><i class="blk" style="background:var(${v});height:2px"></i>${t}</span>`).join('') +
+    (cs.length > 1 ? '<span>rows by case, in case order</span>' : '');
+}
+
+/* ---- generator control mode, in the network the selected metric uses ---- */
+const metricNetwork = () => (st.metric === 'SCR' || st.metric === 'WSCR') ? 'base' : 'ibr';
+function drawGenerators() {
+  const cs = casesShown(), net = metricNetwork();
+  document.getElementById('gen-note').textContent = net === 'base' ? 'Network without IBRs, as used by SCR and WSCR.' : 'Network with IBRs, as used by ESCR and SDSCR.';
+  const code = { off: 0.5, min: 1.5, max: 2.5, reg: 3.5 };
+  const rows = [];
+  cs.forEach(c => (((D.gens[c] || {})[net]) || []).forEach(g => rows.push({ label: cs.length > 1 ? `${g.name} · ${CASE_SHORT(c)}` : g.name, g })));
+  const tr = rows.length ? [{
+    type: 'heatmap', x: D.T, y: rows.map(r => r.label), z: rows.map(r => r.g.mode.map(m => code[m])),
+    text: rows.map(r => r.g.mode.map(m => `${r.label}: ${MODE_WORD[m]}`)), customdata: rows.map(() => hoursIdx()),
+    hovertemplate: '%{text}<extra></extra>', zmin: 0, zmax: 4, showscale: false, xgap: 0, ygap: 2,
+    colorscale: [[0, css('--gs-off')], [0.25, css('--gs-off')], [0.25, css('--gs-min')], [0.5, css('--gs-min')],
+                 [0.5, css('--gs-max')], [0.75, css('--gs-max')], [0.75, css('--gs-reg')], [1, css('--gs-reg')]],
+  }] : [];
+  const lay = baseLayout(rows.length * 22 + 60, '', { hovermode: 'closest' });
+  lay.yaxis = { showgrid: false, zeroline: false, autorange: 'reversed', automargin: true, tickfont: { family: css('--mono'), size: 10.5, color: css('--muted') } };
+  plot('gen', tr, lay);
+  document.getElementById('gen-key').innerHTML =
+    [['--gs-reg', 'regulating voltage'], ['--gs-max', 'at Qmax'], ['--gs-min', 'at Qmin'], ['--gs-off', 'not committed']]
+      .map(([v, t]) => `<span><i class="blk" style="background:var(${v})"></i>${t}</span>`).join('') +
+    (D.hasDispatch ? '' : '<span>commitment not in this run; all units shown as committed</span>');
+}
+
+/* ---- metric chart ---- */
+function drawMain() {
+  const m = st.metric, tr = [];
+  document.getElementById('metric-title').textContent = m;
+  const showCmp = st.cmp && CMP;
+  casesShown().forEach(c => {
+    const blk = (D.metrics[c] || {})[m] || {}, old = ((CMP || {})[c] || {})[m] || {};
+    const sfx = casesShown().length > 1 ? ' · ' + CASE_SHORT(c) : '';
+    if (m === 'WSCR') {
+      tr.push(line(blk.group, 'WSCR' + sfx, css('--accent'), dashFor(c), 1.6));
+      if (showCmp) tr.push(line(old.group, 'WSCR · comparison' + sfx, css('--faint'), 'dot', 1.2));
+      return;
+    }
+    shownSites().forEach(s => {
+      const b = s[MET[m].key], col = css(s.color), nm = `site ${s.label}${sfx}`;
+      if (m === 'ESCR' && single()) tr.push(line(escrCeiling(c, s), nm + ' · ceiling', rgba(col, .55), 'dash', 1, { hovertemplate: '%{y:.2f}<extra>' + nm + ' · ceiling</extra>' }));
+      tr.push(line(blk[b], nm, col, dashFor(c), 1.6, { hovertemplate: '%{y:.2f}<extra>' + nm + '</extra>' }));
+      if (showCmp) tr.push(line(old[b], nm + ' · comparison', rgba(col, .7), 'dot', 1.1));
+    });
+  });
+  plot('main', tr, baseLayout(440, m), zeroBands());
+  const L = [];
+  if (m === 'WSCR') L.push('<span><i class="sw" style="color:var(--accent)"></i>WSCR, all sites as one group</span>');
+  else shownSites().forEach(s => L.push(`<span><i class="sw" style="color:var(${s.color})"></i>site ${s.label} · bus ${s[MET[m].key]}</span>`));
+  if (m === 'ESCR' && single()) {
+    L.push('<span><i class="sw dash" style="color:var(--muted)"></i>without interaction: SCMVA / P<sub>rated</sub> (all MIIF = 0)</span>');
+    L.push('<span><i class="blk" style="background:var(--band);outline:1px solid var(--rule)"></i>interaction factors vanish</span>');
+  }
+  if (casesShown().length > 1) L.push(`<span><i class="sw" style="color:var(--muted)"></i>${CASE_SHORT(D.cases[0])}</span><span><i class="sw dash" style="color:var(--muted)"></i>other case</span>`);
+  if (showCmp) L.push('<span><i class="sw dot" style="color:var(--muted)"></i>comparison run</span>');
+  document.getElementById('main-key').innerHTML = L.join('');
+}
+
+/* ---- terms ---- */
+const pairStyle = s => ['solid', 'dash', 'dot', 'dashdot', 'longdash'][s.id % 5];
+function drawDrivers() {
+  const m = st.metric, panels = [];
+  const per = (title, note, unit, getter, opts) => panels.push({ title, note, unit, getter, opts: opts || {} });
+  const siteSeries = getter => c => shownSites().map(s => ({ s, y: getter(c, s), name: `site ${s.label}` }));
+  const styleNote = word => 'line style by ' + word + ' site: ' + D.sites.map(s => `${s.label} ${pairStyle(s)}`).join(', ');
+  // terms shown per metric (author choice, 23 Oct 2026)
+  if (m === 'SCR') {
+    per('Short-circuit MVA at the POI', 'numerator; the denominator, rated MW, is constant', 'MVA', siteSeries((c, s) => vars(c, 'SCR', 'scmva')[s.poi]));
+    per('Pre-fault |V| at the POI', 'sets the fault current: SCMVA ≈ 100·|V| / |Z_ii|', 'pu', siteSeries((c, s) => vars(c, 'SCR', 'v_pf')[s.poi]));
+  } else if (m === 'WSCR') {
+    per('Short-circuit MVA at each POI', 'averaged with rated-MW weights', 'MVA', siteSeries((c, s) => vars(c, 'WSCR', 'scmva')[s.poi]));
+  } else if (m === 'ESCR') {
+    per('Short-circuit MVA at the MV bus', 'numerator; the voltage step does not change it', 'MVA', siteSeries((c, s) => vars(c, 'ESCR', 'scmva')[s.escr]));
+    const vlabel = (VARIANTS.find(([v]) => v === st.variant) || [null, st.variant])[1];
+    per('Interaction factors MIIF_j←i', (st.variant === REFERENCE_VARIANT ? '|Z_ji / Z_ii|, the instant response'
+        : `response at j to a voltage step at i (${vlabel})`) + '; colour is the site seen', 'ratio', c => {
+      const IF = vars(c, 'ESCR', 'if_magnitude'), out = [];
+      shownSites().forEach(si => D.sites.forEach(sj => { if (sj.id !== si.id) out.push({ s: sj, y: IF[`${sj.escr}>${si.escr}`], name: `IF ${sj.label}←${si.label}`, dash: pairStyle(si) }); }));
+      return out; }, { note2: styleNote('stepped'), zero: true });
+  } else {
+    per('Terminal |V|', 'numerator |V_i|²', 'pu', siteSeries((c, s) => vars(c, 'SDSCR', 'v_pf')[s.sdscr]));
+    per('Coupling weights |w_ij|', 'weight of site j in the SDSCR of site i; colour is site j', 'ratio', c => {
+      const W = vars(c, 'SDSCR', 'w_complex'), out = [];
+      shownSites().forEach(si => D.sites.forEach(sj => { if (sj.id !== si.id) out.push({ s: sj, y: W[`${si.sdscr}>${sj.sdscr}`], name: `|w| ${si.label}←${sj.label}`, dash: pairStyle(si) }); }));
+      return out; }, { note2: styleNote('evaluated') });
+    per('Driving-point |Z_ii|', 'from the full network inverse at the converter terminal', 'pu', siteSeries((c, s) => vars(c, 'SDSCR', 'z_rr')[`${s.sdscr}>${s.sdscr}`]));
+  }
+  document.getElementById('drv-note').textContent = m === 'ESCR' ? 'Network with IBRs, MV buses. Shaded bands: hours where every interaction factor is zero.' : m === 'SDSCR' ? 'Network with IBRs, converter terminals.' : 'Network without IBRs, POI buses.';
+  const box = document.getElementById('drivers');
+  box.innerHTML = panels.map((p, k) => `<div class="small"><h3>${p.title}</h3><p>${p.note}${p.opts.note2 ? '. ' + p.opts.note2 : ''}</p><div id="drv${k}" class="chart"></div></div>`).join('');
+  charts = charts.filter(el => !/^drv\d+$/.test(el.id));
+  panels.forEach((p, k) => {
+    const tr = [];
+    casesShown().forEach(c => p.getter(c).forEach(sr => tr.push(line(sr.y, sr.name + (casesShown().length > 1 ? ' · ' + CASE_SHORT(c) : ''),
+      css(sr.s.color), !single() && c !== D.cases[0] ? 'dash' : (sr.dash || 'solid'), 1.3))));
+    if (p.opts.switches) casesShown().forEach(c => shownSites().forEach(s => {
+      const idx = idxWhere(vars(c, 'ESCR', 'probe_pv_changes')[s.escr], x => x > 0);
+      const q = vars(c, 'ESCR', 'probe_reactive_power_mvar')[s.escr] || [];
+      tr.push({ x: idx.map(i => D.T[i]), y: idx.map(i => q[i]), customdata: idx, type: 'scatter', mode: 'markers', name: `mode change · site ${s.label}`,
+        marker: { symbol: 'circle-open', size: 6, color: css('--switch'), line: { width: 1.2, color: css('--switch') } }, hovertemplate: 'generator mode change<extra>site ' + s.label + '</extra>' });
+    }));
+    const lay = baseLayout(260, p.unit, { margin: { l: 50, r: 8, t: 6, b: 32 } });
+    if (p.opts.zero) lay.yaxis.rangemode = 'tozero';
+    plot('drv' + k, tr, lay, zeroBands());
+  });
+}
+
+/* ---- compare: all metrics, each series relative to its own median (same metric, bus and case) ---- */
+const CMP_METRICS = [['SCR', 'poi', '--m-scr'], ['WSCR', null, '--m-wscr'], ['ESCR', 'escr', '--m-escr'], ['SDSCR', 'sdscr', '--m-sdscr']];
+function median(a) {
+  const v = (a || []).filter(x => x != null && isFinite(x)).sort((x, y) => x - y);
+  if (!v.length) return null; const k = v.length >> 1; return v.length % 2 ? v[k] : (v[k - 1] + v[k]) / 2;
+}
+const metricSeries = (c, m, bus) => (((D.metrics[c] || {})[m] || {})[bus]) || [];
+function drawCompare() {
+  const sites = shownSites(), cs = casesShown();
+  const metrics = CMP_METRICS.filter(([m]) => D.metricList.includes(m));
+  const rel = st.cmpScale !== 'abs', unit = rel ? '×' : '';
+  document.getElementById('cmp-rel-title').textContent = rel ? 'Relative to its own median' : 'Metric values';
+  document.getElementById('cmp-rel-note').textContent = rel
+    ? 'Each series divided by its own median: same metric, same bus, same case. 1.0 is a typical hour of that series. Compare the shape and timing, not the level; switch to Value for the outage drop.'
+    : 'Each metric as computed. The metrics use different networks, buses and denominators, so their levels are not directly comparable.';
+
+  // 1 · one chart per site, as values or relative to each series' own median
+  const box = document.getElementById('cmp-rel');
+  box.innerHTML = sites.map((s, k) => `<div class="small"><h3><span style="color:var(${s.color})">●</span> site ${s.label}</h3>` +
+    `<p>${metrics.filter(([, key]) => key).map(([m, key]) => `${m} at bus ${s[key]}`).join(' · ')}${metrics.some(([m]) => m === 'WSCR') ? ' · WSCR for the group' : ''}</p>` +
+    `<div id="cmprel${k}" class="chart"></div></div>`).join('');
+  charts = charts.filter(el => !/^cmprel\d+$/.test(el.id));
+  const per = sites.map(s => {
+    const tr = [];
+    metrics.forEach(([m, key, col]) => {
+      const bus = key ? s[key] : 'group';
+      cs.forEach(c => {
+        const y = metricSeries(c, m, bus), base = median(y);
+        if (rel && !base) return;
+        tr.push(line(y.map(x => x == null ? null : rel ? x / base : x),
+          m + (cs.length > 1 ? ' · ' + CASE_SHORT(c) : ''), css(col), dashFor(c), m === 'WSCR' ? 1.1 : 1.5,
+          { hovertemplate: '%{y:.2f}' + unit + '<extra>' + m + (cs.length > 1 ? ' · ' + CASE_SHORT(c) : '') + '</extra>' }));
+      });
+    });
+    return tr;
+  });
+  const ys = per.flat().flatMap(t => t.y).filter(v => v != null && isFinite(v));
+  const range = ys.length ? [Math.min(...ys) * 0.97, Math.max(...ys) * 1.03] : undefined;
+  const one = [{ type: 'line', xref: 'paper', x0: 0, x1: 1, yref: 'y', y0: 1, y1: 1, layer: 'below', line: { color: css('--rule'), width: 1 } }];
+  per.forEach((tr, k) => {
+    const lay = baseLayout(290, k === 0 ? (rel ? '× own median' : 'value') : '', { margin: { l: 50, r: 8, t: 6, b: 32 } });
+    if (range) lay.yaxis.range = range;
+    plot('cmprel' + k, tr, lay, rel ? one : []);
+  });
+  document.getElementById('cmp-rel-key').innerHTML =
+    metrics.map(([m, , col]) => `<span><i class="sw" style="color:var(${col})"></i>${m}</span>`).join('') +
+    (cs.length > 1 ? `<span><i class="sw" style="color:var(--muted)"></i>${CASE_SHORT(D.cases[0])}</span><span><i class="sw dash" style="color:var(--muted)"></i>other case</span>` : '') +
+    '<span>shared scale across sites</span>';
+}
+
+/* ---- compare: when and how low each metric reaches its minimum ---- */
+const LOW_FRAC = 0.10;   // share of hours ticked as the lowest; a display aid, not a screening criterion
+function argMin(a) { let k = null; (a || []).forEach((x, i) => { if (x != null && isFinite(x) && (k == null || x < a[k])) k = i; }); return k; }
+function lowest(a, frac) {
+  const v = (a || []).map((x, i) => [x, i]).filter(([x]) => x != null && isFinite(x)).sort((p, q) => p[0] - q[0]);
+  return v.slice(0, Math.max(1, Math.round(v.length * frac))).map(p => p[1]);
+}
+function drawMinima() {
+  const ref = D.cases[0], sites = shownSites(), cs = casesShown();
+  const metrics = CMP_METRICS.filter(([m]) => D.metricList.includes(m));
+  const rowName = (m, c) => m + (cs.length > 1 ? ' · ' + CASE_SHORT(c) : '');
+  const xr = [shiftTime(D.T[0], -60), shiftTime(D.T[D.N - 1], 60)];
+  const box = document.getElementById('cmp-min');
+  box.innerHTML = sites.map((s, k) => `<div class="small"><h3><span style="color:var(${s.color})">●</span> site ${s.label}</h3><div id="cmpmin${k}" class="chart"></div></div>`).join('');
+  charts = charts.filter(el => !/^cmpmin\d+$/.test(el.id));
+  const found = [];
+  sites.forEach((s, k) => {
+    const tr = [], labels = [];
+    metrics.forEach(([m, key, col]) => cs.forEach(c => {
+      const bus = key ? s[key] : 'group', y = metricSeries(c, m, bus), lbl = rowName(m, c), color = css(col);
+      const base = median(y), h = argMin(y), lo = lowest(y, LOW_FRAC);
+      labels.push(lbl);
+      found.push({ s, m, c, h, v: h == null ? null : y[h], rel: h != null && base ? y[h] / base : null });
+      tr.push({ x: lo.map(i => D.T[i]), y: lo.map(() => lbl), customdata: lo, type: 'scatter', mode: 'markers', name: lbl,
+        marker: { symbol: 'line-ns-open', size: 11, color: rgba(color, .5), line: { width: 1.3, color: rgba(color, .5) } },
+        hovertemplate: `%{x|%a %d %H:%M}<extra>${lbl} · lowest ${Math.round(LOW_FRAC * 100)} %</extra>` });
+      if (h != null) tr.push({ x: [D.T[h]], y: [lbl], customdata: [h], type: 'scatter', mode: 'markers', name: lbl + ' minimum',
+        marker: { symbol: c === ref ? 'circle' : 'circle-open', size: 10, color, line: { width: 1.6, color } },
+        hovertemplate: `${fmt(y[h])}${base ? ` · ${fmt(y[h] / base)}× own median` : ''}<br>%{x|%a %d %H:%M}<extra>${lbl} minimum</extra>` });
+    }));
+    const lay = baseLayout(labels.length * 32 + 50, '', { hovermode: 'closest', margin: { l: 10, r: 10, t: 6, b: 32 } });
+    Object.assign(lay.xaxis, { range: xr, showgrid: true, gridcolor: css('--grid') });
+    lay.yaxis = { type: 'category', categoryorder: 'array', categoryarray: labels, autorange: 'reversed', showgrid: true, gridcolor: css('--grid'),
+                  zeroline: false, automargin: true, tickfont: { family: css('--mono'), size: 10.5, color: css('--muted') } };
+    plot('cmpmin' + k, tr, lay);
+  });
+  document.getElementById('cmp-min-key').innerHTML =
+    metrics.map(([m, , col]) => `<span><i class="blk" style="background:var(${col});border-radius:50%;width:9px"></i>${m}</span>`).join('') +
+    (cs.length > 1 ? `<span>filled: ${CASE_SHORT(ref)} minimum · open: other case</span>` : '') +
+    '<span>WSCR is one value for the group, repeated in each site</span>';
+  const head = '<thead><tr><th>Site</th><th>Metric</th>' + cs.map(c => `<th colspan="3">${CASE_LABEL(c)}</th>`).join('') + '</tr>' +
+    '<tr><th></th><th></th>' + cs.map(() => '<th>min</th><th>× own median</th><th>when</th>').join('') + '</tr></thead>';
+  const body = sites.map(s => metrics.map(([m], i) => `<tr${i === 0 ? ' class="first"' : ''}><td>${i === 0 ? `<span style="color:var(${s.color})">●</span> ${s.label}` : ''}</td><td>${m}</td>` +
+    cs.map(c => { const r = found.find(f => f.s === s && f.m === m && f.c === c); return `<td>${fmt(r.v)}</td><td>${fmt(r.rel)}</td><td>${r.h == null ? '—' : dayTime(D.T[r.h])}</td>`; }).join('') +
+    '</tr>').join('')).join('');
+  document.getElementById('cmp-min-table').innerHTML = `<table class="kv mins">${head}<tbody>${body}</tbody></table>`;
+}
+
+/* ---- hour inspector ---- */
+function setHour(h) {
+  st.hour = h;
+  document.getElementById('pin').textContent = st.pinned ? 'pinned · click again to release' : 'hover a chart · click to pin';
+  const cur = cursorShape();
+  charts.forEach(el => { try { Plotly.relayout(el, { shapes: (el._static || []).concat(cur) }); } catch (e) {} });
+  drawInspector();
+}
+function drawInspector() {
+  const el = document.getElementById('insp'), h = st.hour;
+  if (h == null) { el.innerHTML = '<p class="hint">Move over any chart to read the metric values for that hour. Click to keep it while you change metric or case.</p>'; return; }
+  let html = `<div class="when">${dayTime(D.T[h])} · hour ${h} · λ ${fmt(sum(D.cases[0], 'load_scale')[h], 3)}</div>`;
+  casesShown().forEach(c => {
+    const mv = (m, b) => (((D.metrics[c] || {})[m] || {})[b] || [])[h];
+    html += `<div class="sec">${CASE_LABEL(c)}</div><table class="kv"><thead><tr><th></th>` +
+      D.sites.map(s => `<th><span style="color:var(${s.color})">●</span> ${s.label}</th>`).join('') + '</tr></thead><tbody>';
+    D.metricList.forEach(m => {
+      html += m === 'WSCR'
+        ? `<tr><td>WSCR</td><td colspan="${D.sites.length}">${fmt(mv('WSCR', 'group'))}</td></tr>`
+        : `<tr><td>${m}</td>` + D.sites.map(s => `<td>${fmt(mv(m, s[MET[m].key]))}</td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+  });
+  el.innerHTML = html;
+}
+
+/* ================= controls ================= */
+function tabs(id, items, key) {
+  const box = document.getElementById(id);
+  box.innerHTML = items.map(([v, t]) => `<button type="button" data-v="${v}">${t}</button>`).join('');
+  box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { st[key] = b.dataset.v; save(); render(); }));
+}
+function rebuild() {
+  D = build(RAW);
+  if (CMP_RAW) CMP = buildCompare(CMP_RAW);
+  if (!D.cases.includes(st.case)) st.case = D.cases[0];
+  buildControls(); save(); render();
+}
+function buildControls() {
+  const cm = document.getElementById('commitment');
+  cm.innerHTML = COMMITMENTS.map(([v, t]) => `<button type="button" data-v="${v}">${t}</button>`).join('');
+  cm.querySelectorAll('button').forEach(b => b.onclick = () => { st.commitment = b.dataset.v; rebuild(); });
+  const vs = document.getElementById('variant');
+  vs.innerHTML = VARIANTS.map(([v, t]) => `<option value="${v}">${t}</option>`).join('');
+  vs.onchange = () => { st.variant = vs.value; rebuild(); };
+  const cs = document.getElementById('case');
+  cs.innerHTML = D.cases.map(c => `<option value="${c}">${CASE_LABEL(c)}</option>`).join('');
+  cs.onchange = () => { st.case = cs.value; save(); render(); };
+  document.getElementById('overlay').onchange = e => { st.overlay = e.target.checked; save(); render(); };
+  tabs('metric', D.metricList.map(m => [m, m]).concat([['Compare', 'Compare']]), 'metric');
+  tabs('cmp-scale', [['rel', '× own median'], ['abs', 'Value']], 'cmpScale');
+  const sb = document.getElementById('sites');
+  sb.innerHTML = D.sites.map(s => `<button type="button" class="chip" data-s="${s.id}"><i style="background:var(${s.color})"></i>${s.label}</button>`).join('');
+  sb.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+    const id = Number(b.dataset.s);
+    if (st.sites.has(id) && st.sites.size > 1) st.sites.delete(id); else st.sites.add(id);
+    save(); render();
+  }));
+}
+function syncControls() {
+  const press = (id, v) => document.querySelectorAll(`#${id} button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+  document.getElementById('case').value = st.case;
+  const ov = document.getElementById('overlay'), intactOnly = st.case === D.cases[0];
+  ov.checked = st.overlay && !intactOnly; ov.disabled = intactOnly;
+  document.getElementById('overlay-toggle').classList.toggle('disabled', intactOnly);
+  press('metric', st.metric); press('cmp-scale', st.cmpScale); press('commitment', st.commitment);
+  document.getElementById('variant').value = st.variant;
+  document.getElementById('variant-group').hidden = !(st.metric === 'ESCR' || st.metric === 'Compare');
+  document.querySelectorAll('#sites .chip').forEach(b => b.setAttribute('aria-pressed', String(st.sites.has(Number(b.dataset.s)))));
+  const t = document.getElementById('cmp'); t.checked = st.cmp && !!CMP; t.disabled = !CMP;
+  document.getElementById('cmp-toggle').classList.toggle('disabled', !CMP);
+}
+const KEY = 'glover-strength-explorer';
+function save() { try { localStorage.setItem(KEY, JSON.stringify({ case: st.case, overlay: st.overlay, commitment: st.commitment, variant: st.variant, metric: st.metric, sites: [...st.sites], cmp: st.cmp, cmpScale: st.cmpScale })); } catch (e) {} }
+function savedPrefs() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+function restoreView() {
+  const v = savedPrefs();
+  st.commitment = v && COMMITMENTS.some(([c]) => c === v.commitment) ? v.commitment : 'sequential';
+  st.variant = v && VARIANTS.some(([c]) => c === v.variant) ? v.variant : REFERENCE_VARIANT;
+}
+function restore() {
+  const v = savedPrefs();
+  st.case = v && D.cases.includes(v.case) ? v.case : D.cases[0];
+  st.overlay = v ? v.overlay !== false : true;
+  st.metric = v && (D.metricList.includes(v.metric) || v.metric === 'Compare') ? v.metric : (D.metricList.includes('ESCR') ? 'ESCR' : D.metricList[0]);
+  const ids = new Set(D.sites.map(s => s.id));
+  st.sites = new Set(v && v.sites ? v.sites.filter(x => ids.has(x)) : [...ids]); if (!st.sites.size) st.sites = new Set(ids);
+  st.cmp = !!(v && v.cmp);
+  st.cmpScale = v && v.cmpScale === 'abs' ? 'abs' : 'rel';
+}
+function render() {
+  syncControls();
+  const compare = st.metric === 'Compare';
+  ['sec-gen', 'sec-main', 'sec-terms'].forEach(id => { document.getElementById(id).hidden = compare; });
+  ['sec-cmp-rel', 'sec-cmp-min'].forEach(id => { document.getElementById(id).hidden = !compare; });
+  charts = charts.filter(el => el.offsetParent !== null || el.id === 'ctx');
+  drawContext();
+  if (compare) { drawCompare(); drawMinima(); } else { drawGenerators(); drawMain(); drawDrivers(); }
+  drawInspector();
+}
+
+/* ================= boot ================= */
+const statusEl = document.getElementById('status');
+function showStatus(html, isErr) { statusEl.hidden = false; statusEl.className = 'status' + (isErr ? ' err' : ''); statusEl.innerHTML = html; }
+function setSource() {
+  document.getElementById('src-run').textContent = source.runFiles ? folderName(source.runFiles) : source.run;
+  document.getElementById('src-cmp-wrap').hidden = !(source.compare || source.cmpFiles);
+  document.getElementById('src-cmp').textContent = source.cmpFiles ? folderName(source.cmpFiles) : (source.compare || '');
+}
+async function load() {
+  setSource();
+  if (!window.Plotly) { showStatus('The charts could not load because plotly.js from cdnjs is unreachable. Check the connection and press Reload.', true); return; }
+  showStatus('Loading results…');
+  try {
+    RAW = source.runFiles ? await readFromPicker(source.runFiles) : await readFromUrl(source.run);
+    restoreView();
+    D = build(RAW);
+  } catch (e) {
+    const hint = location.protocol === 'file:' ? ' Opened straight from disk, the browser does not let the page read these files. Run <code>python tools/explorer.py</code> from the repository, or use <b>Choose results folder</b> and pick <code>results/glover37/raw</code>.' : '';
+    showStatus(`The results in <code>${source.runFiles ? folderName(source.runFiles) : source.run}</code> could not be read (${e.message}).${hint}`, true);
+    document.getElementById('app').hidden = true; return;
+  }
+  CMP = null; CMP_RAW = null;
+  if (source.cmpFiles || source.compare) {
+    try { CMP_RAW = source.cmpFiles ? await readFromPicker(source.cmpFiles) : await readFromUrl(source.compare); CMP = buildCompare(CMP_RAW); }
+    catch (e) { showStatus(`The run loaded, but the comparison folder could not be read (${e.message}).`, true); }
+  }
+  if (!D.N || !D.cases.length) { showStatus('This results folder has no states to show.', true); return; }
+  if (!CMP) statusEl.hidden = true;
+  restore(); buildControls();
+  document.getElementById('app').hidden = false;
+  st.hour = null; st.pinned = false; charts = [];
+  render();
+  console.info(`loaded ${D.counts.metrics} metric rows, ${D.counts.variables} variable rows, ${D.counts.states} states`);
+}
+document.getElementById('reload').addEventListener('click', load);
+document.getElementById('pick-run').addEventListener('change', e => { if (e.target.files.length) { source.runFiles = e.target.files; load(); } });
+document.getElementById('pick-cmp').addEventListener('change', e => { if (e.target.files.length) { source.cmpFiles = e.target.files; st.cmp = true; load(); } });
+document.getElementById('cmp').addEventListener('change', e => { st.cmp = e.target.checked; save(); drawMain(); });
+new MutationObserver(() => D && render()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+load();
+})();
+</script>
+</body>
+</html>
