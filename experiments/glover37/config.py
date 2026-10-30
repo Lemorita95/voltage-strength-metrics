@@ -48,7 +48,8 @@ SE3_LOAD_COLUMN = "SE3"
 #   all_online  rule (a): every non-slack unit online at max(MWMin, s * MWMax), s in
 #               [0, 1] set to meet the target; the slack takes the rest. When the units'
 #               MWMin alone exceeds the target (s = 0) the slack exports (slack_exporting).
-# Both dispatch demand on the 37-bus network and demand - IBR_MW on the 46-bus one.
+# Both dispatch demand on the 37-bus network and demand - the state's IBR output
+# (network.ibr_output_mw) on the 46-bus one.
 SEQUENTIAL, ALL_ONLINE = "sequential", "all_online"
 COMMITMENT_RULES = (SEQUENTIAL, ALL_ONLINE)
 
@@ -112,14 +113,16 @@ class IBRSite:
 
 
 # Two MV buses + one LV bus at each site. Bus IDs do not overlap Glover IDs.
-# Every plant runs at its rated output, the worst case: the largest P in every
-# metric's denominator and the most synchronous generation displaced.
 SITES = (
     IBRSite(21, 60.0, 2101, 2102, 2103),
     IBRSite(48, 45.0, 4801, 4802, 4803),
     IBRSite(16, 45.0, 1601, 1602, 1603),
 )
-IBR_MW = sum(site.pmax_mw for site in SITES)
+# IBR active output in every state, as a fraction of rated; applied per state by
+# network.ibr_output_mw, the hook for a time-varying output (e.g. an irradiance profile).
+# 1.0: rated, the worst case: the most synchronous generation displaced (Gate 4 ran 0.8).
+# Metric denominators always use rated MW (AS_RUN), whatever the output.
+IBR_OUTPUT_FRACTION = 1.0
 
 # =============================================================================
 # 4. Metrics, operating-state checks, contingencies

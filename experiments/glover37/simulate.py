@@ -52,12 +52,12 @@ from models.SystemStrength import SCR, WSCR, ESCR, SDSCR, fault_scmva
 from models.VoltageLimits import PRESETS, VoltageLimits
 from experiments.glover37 import manifest
 from experiments.glover37.config import (
-    ALL_ONLINE, AUDITED_PROBE, CASE_FILE, GEN_LIMITS_FILE, IBR_MW, IF_STEPS, IMPEDANCE_VARIANT,
+    ALL_ONLINE, AUDITED_PROBE, CASE_FILE, GEN_LIMITS_FILE, IF_STEPS, IMPEDANCE_VARIANT,
     INTACT, RAW_DIR, REFERENCE_VARIANT, S_BASE_MVA, SE3_FILE, SEQUENTIAL, SITES, SLACK_BUS,
     VOLTAGE_PRESET, WINDOW_HOURS, probe_variant,
 )
 from experiments.glover37.network import (
-    augment_network, baseline_load_mw, operating_state_audit, prepare_network,
+    augment_network, baseline_load_mw, ibr_output, operating_state_audit, prepare_network,
     read_gen_limits, read_se3, schedule, select_week, sequential_dispatch,
 )
 
@@ -154,11 +154,13 @@ def screen_line(line, week):
         failed = []
         for r in week.itertuples(index=False):
             demand = base_load_mw * float(r.load_scale)
+            output = ibr_output(r)
+            ibr_mw = sum(p for p, _ in output.values())
             ok_base = converges(prepare_network(
                 r.load_scale, sequential_dispatch(demand, limits), limits, line))
-            aug_net = prepare_network(r.load_scale, sequential_dispatch(demand - IBR_MW, limits),
+            aug_net = prepare_network(r.load_scale, sequential_dispatch(demand - ibr_mw, limits),
                                       limits, line)
-            augment_network(aug_net)  # rebuilds the Y-bus
+            augment_network(aug_net, output)  # rebuilds the Y-bus
             ok_ibr = converges(aug_net)
             row['n_converged_base'] += ok_base
             row['n_converged_ibr'] += ok_ibr
@@ -280,12 +282,13 @@ def evaluate_state(task, voltage_limits):
     """All outputs of one operating state (hour, commitment rule, case), computed
     independently of every other state. On failure, `error` is set and the outputs hold
     what was computed."""
-    h, timestamp, scale, commitment, case, line = task
+    h, timestamp, scale, commitment, case, line, output = task
     limits, base_load_mw = schedule_inputs()
     demand = base_load_mw * scale
+    ibr_mw = sum(p for p, _ in output.values())
     # Crucial: independent schedules for the two networks, same commitment rule.
     base_dispatch, base_on = schedule(commitment, demand, limits)
-    ibr_dispatch, ibr_on = schedule(commitment, demand - IBR_MW, limits)
+    ibr_dispatch, ibr_on = schedule(commitment, demand - ibr_mw, limits)
     rated = {
         'SCR': {site.poi_bus: site.pmax_mw for site in SITES},
         'ESCR': {site.escr_bus: site.pmax_mw for site in SITES},
@@ -306,12 +309,14 @@ def evaluate_state(task, voltage_limits):
                 'bus': gen.bus, 'committed': int(online[gen.key]),
                 'dispatch_MW': dispatch[gen.key],
                 'system_demand_MW': demand,
-                'ibr_injection_MW': IBR_MW if network_name == 'ibr' else 0,
+                'ibr_injection_MW': ibr_mw if network_name == 'ibr' else 0,
             })
     step = f'{commitment}:{case}:{h}'
     state = out['state'] = {
         **key, 'load_scale': scale, 'system_demand_MW': demand,
-        'ibr_injection_MW': IBR_MW,
+        'ibr_injection_MW': ibr_mw,
+        **{f'ibr_P_MW_{bus}': p for bus, (p, _) in output.items()},
+        **{f'ibr_Q_MVAr_{bus}': q for bus, (_, q) in output.items()},
         'base_non_slack_MW': sum(base_dispatch.values()),
         'ibr_case_non_slack_MW': sum(ibr_dispatch.values()),
         'base_n_committed': sum(base_on.values()),
@@ -322,7 +327,7 @@ def evaluate_state(task, voltage_limits):
     try:
         base_net = prepare_network(scale, base_dispatch, limits, line, base_on)
         aug_net = prepare_network(scale, ibr_dispatch, limits, line, ibr_on)
-        augment_network(aug_net)
+        augment_network(aug_net, output)
         base_v, base_pf = solve_pf(base_net, 'base')
         state['base_pf_ok'] = True
         state.update(operating_state_audit(base_net, base_pf, np.abs(base_v),
@@ -363,12 +368,14 @@ def evaluate_state(task, voltage_limits):
 
 
 def state_tasks(week, contingencies):
-    """(hour, timestamp, load scale, commitment, case, line) for every state: per hour,
-    the sequential intact state and outages (E1, E2), then the all_online intact state (E5)."""
+    """(hour, timestamp, load scale, commitment, case, line, IBR output) for every state:
+    per hour, the sequential intact state and outages (E1, E2), then the all_online intact
+    state (E5). IBR output: network.ibr_output of the hour's row."""
     scenarios = ([(SEQUENTIAL, INTACT, None)]
                  + [(SEQUENTIAL, case, line.lower()) for case, line in contingencies]
                  + [(ALL_ONLINE, INTACT, None)])
-    return [(int(row.hour_index), row.timestamp, float(row.load_scale), commitment, case, line)
+    return [(int(row.hour_index), row.timestamp, float(row.load_scale), commitment, case, line,
+             ibr_output(row))
             for row in week.itertuples(index=False) for commitment, case, line in scenarios]
 
 
@@ -383,7 +390,7 @@ def evaluate_temporal(week, *, contingencies=(), out_dir=RAW_DIR,
     fn = functools.partial(evaluate_state, voltage_limits=voltage_limits)
     started, reported = time.monotonic(), 0
     with parallel_map(fn, tasks, workers) as outcomes:
-        for k, ((h, timestamp, _, commitment, case, _), out) in enumerate(zip(tasks, outcomes), 1):
+        for k, ((h, timestamp, _, commitment, case, _, _), out) in enumerate(zip(tasks, outcomes), 1):
             # about one line per 5 %; a failure prints its own context below
             if (percent := 100 * k // len(tasks)) >= reported + 5 or k == len(tasks):
                 reported = percent

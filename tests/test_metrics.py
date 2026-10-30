@@ -17,9 +17,10 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from experiments.glover37.config import GEN_LIMITS_FILE, IBR_MW, SITES
+from experiments.glover37.config import GEN_LIMITS_FILE, SITES
 from experiments.glover37.network import (
-    augment_network, baseline_load_mw, prepare_network, read_gen_limits, sequential_dispatch,
+    augment_network, baseline_load_mw, ibr_output, prepare_network, read_gen_limits,
+    sequential_dispatch,
 )
 from experiments.glover37.simulate import solve_pf
 from models.FullConverter import FullConverter
@@ -37,10 +38,11 @@ def quiet(fn, *args, **kwargs):
 def solved_state(ibr):
     """Intact state at load scale 1, 37-bus (ibr False) or 46-bus with converters."""
     limits = read_gen_limits(GEN_LIMITS_FILE)
-    target = baseline_load_mw() - (IBR_MW if ibr else 0.0)
+    output = ibr_output()
+    target = baseline_load_mw() - (sum(p for p, _ in output.values()) if ibr else 0.0)
     net = prepare_network(1.0, sequential_dispatch(target, limits), limits)
     if ibr:
-        augment_network(net)
+        augment_network(net, output)
     v, pf = quiet(solve_pf, net, 'ibr' if ibr else 'base')
     return net, v, pf
 

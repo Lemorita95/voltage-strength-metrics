@@ -20,7 +20,7 @@ from models.Lines import Line
 from models.Transformers import Transformer
 from experiments.glover37.config import (
     ALL_ONLINE, CASE_FILE, CONVERTER_FAULT_MODEL, FEEDER_B_SYSTEM_BASE, FEEDER_Z_SYSTEM_BASE,
-    LV_KV, MV_KV, S_BASE_MVA, SE3_LOAD_COLUMN, SE3_TIMESTAMP_COLUMN, SEQUENTIAL, SITES,
+    IBR_OUTPUT_FRACTION, LV_KV, MV_KV, S_BASE_MVA, SE3_LOAD_COLUMN, SE3_TIMESTAMP_COLUMN, SEQUENTIAL, SITES,
     SLACK_BUS, WINDOW_HOURS, YEAR,
 )
 
@@ -265,13 +265,27 @@ def prepare_network(load_scale, dispatch, limits, contingency=None, committed=No
     return net
 
 
-def augment_network(net):
+def ibr_output(row=None):
+    """{host bus: (P MW, Q MVAr)} of every IBR site in one operating state.
+
+    row: the state's week-table row (hour_index, timestamp, load_scale), where a
+    time-varying output is read, e.g. one irradiance-derived column per site. This study:
+    every site at IBR_OUTPUT_FRACTION x rated P and Q = 0 in every hour. The 46-bus
+    dispatch (demand - total P) and the converters must both take this one result.
+    """
+    return {site.host_bus: (IBR_OUTPUT_FRACTION * site.pmax_mw, 0.0) for site in SITES}
+
+
+def augment_network(net, output=None):
     """Augment an initialized CustomNetwork, rebuild YBus, return IBR sites.
 
     padmount_hv_bus is the 34.5 kV ESCR evaluation bus.
     IEEE SCR/WSCR use poi_bus; SDSCR uses sdscr_bus.
+    output: {host bus: (P MW, Q MVAr)} each converter injects, from ibr_output()
+    (default: ibr_output() with no row).
     This function expects net.create_network() to have run already.
     """
+    output = ibr_output() if output is None else output
     all_new_ids = [bus for site in SITES for bus in
                    (site.main_mv_bus, site.padmount_hv_bus, site.converter_lv_bus)]
     if len(set(all_new_ids)) != len(all_new_ids):
@@ -306,10 +320,11 @@ def augment_network(net):
                                  FEEDER_Z_SYSTEM_BASE, Y_shunt=1j * FEEDER_B_SYSTEM_BASE)
         net.transformers[pad] = Transformer(pad, site.padmount_hv_bus, site.converter_lv_bus, z)
         # FullConverter P, Q are per unit; rating is kVA, nominal voltage is kV.
+        p_mw, q_mvar = output[site.host_bus]
         net.full_converters[converter] = FullConverter(
             name=converter, bus_1=site.converter_lv_bus,
             kVA_nominal=site.converter_mva * 1000.0, cos_phi=1.0, kV_nominal=LV_KV,
-            P=site.pmax_mw / S_BASE_MVA, Q=0.0, fault_model=CONVERTER_FAULT_MODEL,
+            P=p_mw / S_BASE_MVA, Q=q_mvar / S_BASE_MVA, fault_model=CONVERTER_FAULT_MODEL,
         )
 
     net.build_ybus()
