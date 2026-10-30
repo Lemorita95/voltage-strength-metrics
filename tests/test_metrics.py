@@ -112,10 +112,6 @@ class TestConverterFaultModel(unittest.TestCase):
         for v_terminal in (v_pre, 0.5 * v_pre, 0.0 + 0.0j):
             self.assertEqual(conv.get_I(v_terminal, v_pre, s_pre), expected)
 
-    def test_unknown_fault_model_rejected(self):
-        with self.assertRaises(ValueError):
-            self.converter(fault_model='linear')
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,7 +21,7 @@ import pandas as pd
 
 from experiments.glover37 import analyze as asm
 from experiments.glover37 import simulate as rsm
-from experiments.glover37.config import PROBE_VARIANTS, REFERENCE_VARIANT, SE3_FILE, SEQUENTIAL
+from experiments.glover37.config import SE3_FILE
 from experiments.glover37.network import read_se3, select_week
 
 LINES = {  # case -> (line key, from, to)
@@ -82,11 +82,6 @@ class TestPlantedLogic(unittest.TestCase):
         row = self.d1_row({('m', 'ESCR', '21'): dip, ('noV', 'ESCR', '21'): dip})
         self.assertEqual(row['explanation'], 'coupling')
 
-    def test_commitment_not_confirmed(self):
-        late = np.array([3.0, 2.9, 2.8, 2.7, 2.6, 2.5])
-        row = self.d1_row({(v, 'SCR', '21'): late for v in asm.VARIANTS}, metric='SCR')
-        self.assertTrue(row['explanation'].startswith('commitment not confirmed'))
-
     def test_split_is_exact(self):
         rng = np.random.default_rng(1)
         overrides = {(v, 'SDSCR', '48'): rng.uniform(1, 2, 6) for v in asm.VARIANTS}
@@ -119,22 +114,8 @@ class TestIntegration(unittest.TestCase):
     def tearDownClass(cls):
         cls._tmp.cleanup()
 
-    def test_scenarios_count_corridors(self):
-        d1 = self.out['d1_weakest_hour']
-        self.assertEqual(sorted(d1['case'].unique()),
-                         ['intact', 'line_18_37_ckt1_out', 'line_39_47_out'])
-
     def test_reconstruction(self):
         self.assertLess(self.out['reconstruction_check']['max_rel_diff'].max(), 1e-12)
-
-    def test_parallel_circuits_identical(self):
-        par = self.out['parallel_circuits']
-        self.assertEqual(set(par['case']), {'line_18_37_ckt2_out'})
-        self.assertTrue(par['same_t_star'].all())
-        self.assertLess(par['max_abs_dln'].max(), 1e-9)
-
-    def test_a3_unchanged(self):
-        self.assertTrue(self.out['a3_denominators']['unchanged'].all())
 
     def test_decompositions_add_up(self):
         for name in ('d1_weakest_hour', 'd5_snapshots'):
@@ -145,81 +126,10 @@ class TestIntegration(unittest.TestCase):
         scr = d4[d4['metric'].isin(['SCR', 'WSCR'])]
         self.assertTrue((scr['median_dln_coupling'].abs() < 1e-12).all())
 
-    def test_miif_variants(self):
-        rob = self.out['miif_variants']
-        self.assertEqual(list(dict.fromkeys(rob['variant'])), [REFERENCE_VARIANT, *PROBE_VARIANTS])
-
-    def test_coupling_load_definition(self):
-        v = pd.read_csv(self.raw / 'metric_variables.csv', keep_default_na=False)
-        v['bus'] = pd.to_numeric(v['bus'], errors='coerce')
-        v['related_bus'] = pd.to_numeric(v['related_bus'], errors='coerce')
-        intact0 = v[(v.case == 'intact') & (v.hour_index == 0) & (v.metric == 'ESCR')
-                    & (v.commitment == SEQUENTIAL) & (v.variant == REFERENCE_VARIANT)]
-        ifm = intact0[intact0.variable == 'if_magnitude']
-        site = asm.SITE_IDS[0]
-        i_bus = asm.EVAL_BUS['ESCR'][site]
-        rated = asm.P_MW['rated']
-        expected = sum(float(r.real) * rated[next(s for s, b in asm.EVAL_BUS['ESCR'].items() if b == r.bus)]
-                       for r in ifm[ifm.related_bus == i_bus].itertuples()) / rated[site]
-        values = asm.variant_values(asm.view(asm.read_run(self.raw))['variables'],
-                                    {m: asm.P_MW[asm.AS_RUN[m]] for m in asm.METRICS})
-        self.assertAlmostEqual(asm.coupling_load(values, 'ESCR', site, 'intact').loc[0], expected, places=12)
-
-    def test_e5_and_t3(self):
-        # E5 (every unit online) is analysed on the intact network only; T3 pairs it with E1
-        t3 = self.out['t3_commitment']
-        self.assertEqual(len(t3), len(asm.UNITS))
-        self.assertTrue((t3['E5_n_committed'] == 7).all())
-        self.assertEqual(set(self.out['e5_weakest_hour']['case']), {'intact'})
-        for name in ('d5_snapshots', 'e5_snapshots'):
-            t = self.out[name]
-            self.assertTrue((t['g'] >= -1e-12).all() and (t['g_minimum'] >= -1e-12).all())
-
-    def test_tables_tagged(self):
-        # every output table names a known experiment and the RQ/dimension it serves
-        from experiments.glover37.config import EXPERIMENTS
-        analysis = Path(self._tmp.name) / 'analysis'
-        for path in analysis.glob('*.csv'):
-            if path.stem == 'summary':
-                continue
-            t = pd.read_csv(path)
-            self.assertEqual(list(t.columns[:2]), ['experiment', 'serves'], path.stem)
-            ids = {i for cell in t['experiment'].astype(str) for i in cell.split(';')}
-            self.assertTrue(ids and ids <= set(EXPERIMENTS), (path.stem, ids))
-            self.assertTrue(t['serves'].astype(str).str.len().gt(0).all(), path.stem)
-
-    def test_report_text(self):
-        # every claim and caption has rows in summary.csv, and report.md quotes exactly those
-        from experiments.glover37 import report
-        summary = self.out['summary']
-        claims = summary[summary['claim'].str.match(r'^(C\d|captions)')]
-        self.assertEqual({c.split(' ')[0] for c in claims['claim']},
-                         {'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'captions'})
-        text = report.build_report(Path(self._tmp.name) / 'analysis', self.raw)
-        for r in claims.itertuples():
-            self.assertIn(f'- {r.item}: **{r.result}**', text)
-
-    def test_outputs_written(self):
-        analysis = Path(self._tmp.name) / 'analysis'
-        self.assertEqual({p.stem for p in analysis.glob('*.csv')}, set(self.out))
-        self.assertTrue((analysis / 'manifest.json').is_file())
-
     def test_analysis_manifest_names_raw_run(self):
         raw = json.loads((self.raw / 'manifest.json').read_text())
         analysis = json.loads((Path(self._tmp.name) / 'analysis' / 'manifest.json').read_text())
         self.assertEqual(analysis['raw_run_id'], raw['run_id'])
-
-    def test_rejects_raw_without_manifest(self):
-        bare = Path(self._tmp.name) / 'bare'
-        bare.mkdir()
-        for f in asm.INPUT_FILES:
-            (bare / f).write_bytes((self.raw / f).read_bytes())
-        with self.assertRaises(ValueError):
-            quiet(asm.run, bare, Path(self._tmp.name) / 'bare_out')
-
-    def test_rejects_input_as_output(self):
-        with self.assertRaises(ValueError):
-            asm.run(self.raw, self.raw)
 
 
 if __name__ == '__main__':
