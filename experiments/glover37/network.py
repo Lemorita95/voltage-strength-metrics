@@ -359,6 +359,7 @@ def operating_state_audit(net, pf, v_pu, limits, prefix=''):
         'tap_steps_total': int(sum(abs(s) for s in steps.values())),
         'tap_steps': _join(f'{name.split(".", 1)[-1]}:{s:+d}' for name, s in steps.items() if s),
         'control_passes': int(getattr(pf, 'control_passes', 0) or 0),
+        'controls_settled': bool(getattr(pf, 'controls_settled', True)),
         'frozen_controllers': _join(getattr(pf, 'frozen_controllers', []) or []),
         'gens_at_qmax': _join(b for b, s in pv_state.items() if s == 1),
         'gens_at_qmin': _join(b for b, s in pv_state.items() if s == -1),

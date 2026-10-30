@@ -172,13 +172,15 @@ class PowerFlow():
             taps), so a later YBus or short-circuit calculation uses them.
 
             Records: self.pv_state, self.control_passes, self.control_steps
-            (controller name -> net steps), self.frozen_controllers.
+            (controller name -> net steps), self.frozen_controllers, self.controls_settled
+            (False if the controllers still acted after max_control_passes).
             Returns (theta, V), or None if a solve does not converge.
         '''
         CN = CustomNetwork
         self.control_passes = 0
         self.control_steps = {}
         self.frozen_controllers = []
+        self.controls_settled = True
         result = self._solve_fixed_controls(CN, verbose, warm_start, pv_state)
         if result is None or not controls:
             return result
@@ -215,6 +217,7 @@ class PowerFlow():
             if result is None:
                 return None
         else:
+            self.controls_settled = False
             print(f'\t\t\t> voltage controllers did not settle in {max_control_passes} passes')
         return result
 

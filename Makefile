@@ -1,5 +1,8 @@
 export PYTHONUTF8 := 1
 
+# bash for `set -o pipefail` in `strength` (.SHELLFLAGS needs GNU make >= 3.82; macOS has 3.81)
+SHELL := /bin/bash
+
 PYTHON ?= python
 
 # VoltageLimits preset used to flag out-of-band states (models/VoltageLimits.py PRESETS)
@@ -14,6 +17,9 @@ ANALYSIS := $(RESULTS)/analysis
 CONTINGENCIES := $(RAW)/contingency_set.csv
 
 FIGURES := figures/glover37
+
+# one log per `make strength` run (git-ignored)
+LOGS := logs
 
 
 .PHONY: help case strength validate screen simulate analyze report layout \
@@ -51,11 +57,12 @@ case:
 
 
 strength:
-	$(MAKE) validate
-	$(MAKE) screen
-	$(MAKE) simulate
-	$(MAKE) analyze
-	$(MAKE) report
+	@mkdir -p $(LOGS)
+	@log=$(LOGS)/strength_$$(date -u +%Y%m%dT%H%M%SZ).log; \
+	echo "Logging to $$log"; \
+	set -o pipefail; export PYTHONUNBUFFERED=1; \
+	{ $(MAKE) validate && $(MAKE) screen && $(MAKE) simulate \
+		&& $(MAKE) analyze && $(MAKE) report; } 2>&1 | tee "$$log"
 
 
 validate:

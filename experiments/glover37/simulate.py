@@ -38,6 +38,7 @@ import io
 import os
 import shutil
 import tempfile
+import time
 import warnings
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
@@ -198,12 +199,13 @@ def read_contingencies(path, cases=None):
 # 2. Temporal metrics run
 # =============================================================================
 
-def solve_pf(network):
-    '''complex bus voltages and the PowerFlow instance (generator states, control records).'''
+def solve_pf(network, label):
+    '''complex bus voltages and the PowerFlow instance (generator states, control records).
+    label: 'base' or 'ibr', named in the error with the network's bus count.'''
     pf = PowerFlow()
     solved = pf.solve_power_flow(network)
     if solved is None:
-        raise RuntimeError('Power flow failed')
+        raise RuntimeError(f'{label} power flow failed ({len(network.buses)}-bus network)')
     theta, magnitude = solved
     return magnitude * np.exp(1j * theta), pf
 
@@ -306,9 +308,6 @@ def evaluate_state(task, voltage_limits):
                 'system_demand_MW': demand,
                 'ibr_injection_MW': IBR_MW if network_name == 'ibr' else 0,
             })
-    base_net = prepare_network(scale, base_dispatch, limits, line, base_on)
-    aug_net = prepare_network(scale, ibr_dispatch, limits, line, ibr_on)
-    augment_network(aug_net)
     step = f'{commitment}:{case}:{h}'
     state = out['state'] = {
         **key, 'load_scale': scale, 'system_demand_MW': demand,
@@ -321,11 +320,14 @@ def evaluate_state(task, voltage_limits):
         'error': '',
     }
     try:
-        base_v, base_pf = solve_pf(base_net)
+        base_net = prepare_network(scale, base_dispatch, limits, line, base_on)
+        aug_net = prepare_network(scale, ibr_dispatch, limits, line, ibr_on)
+        augment_network(aug_net)
+        base_v, base_pf = solve_pf(base_net, 'base')
         state['base_pf_ok'] = True
         state.update(operating_state_audit(base_net, base_pf, np.abs(base_v),
                                            voltage_limits, prefix='base_'))
-        aug_v, aug_pf = solve_pf(aug_net)
+        aug_v, aug_pf = solve_pf(aug_net, 'ibr')
         state['ibr_pf_ok'] = True
         state.update(operating_state_audit(aug_net, aug_pf, np.abs(aug_v),
                                            voltage_limits, prefix='ibr_'))
@@ -377,23 +379,31 @@ def evaluate_temporal(week, *, contingencies=(), out_dir=RAW_DIR,
     tasks = state_tasks(week, contingencies)
     results, variables, statuses, dispatch_rows = [], [], [], []
     switches = Counter()
+    unsettled = {'base': 0, 'ibr': 0}  # states whose voltage controllers did not settle
     fn = functools.partial(evaluate_state, voltage_limits=voltage_limits)
+    started, reported = time.monotonic(), 0
     with parallel_map(fn, tasks, workers) as outcomes:
-        for (h, timestamp, _, commitment, case, _), out in zip(tasks, outcomes):
-            print(f'[{h + 1:03d}/{len(week):03d}] {timestamp} {commitment} case={case}',
-                  flush=True)
+        for k, ((h, timestamp, _, commitment, case, _), out) in enumerate(zip(tasks, outcomes), 1):
+            # about one line per 5 %; a failure prints its own context below
+            if (percent := 100 * k // len(tasks)) >= reported + 5 or k == len(tasks):
+                reported = percent
+                print(f'[{percent:3d}%] {k}/{len(tasks)} states, '
+                      f'{time.monotonic() - started:.0f} s', flush=True)
             results += out['results']
             variables += out['variables']
             dispatch_rows += out['dispatch']
             statuses.append(out['state'])
             switches.update(out['switches'])
+            for network in unsettled:
+                unsettled[network] += out['state'].get(f'{network}_controls_settled') is False
             if out['error'] is not None:
                 # Fail visibly; never silently treat missing hours as valid.
                 write_outputs(out_dir, results, variables, statuses, dispatch_rows)
                 raise RuntimeError(f'Failed at hour={h}, {commitment}, case={case}: {out["error"]}')
 
     write_outputs(out_dir, results, variables, statuses, dispatch_rows)
-    return {'states': len(statuses), 'probe_mode_switches': dict(sorted(switches.items()))}
+    return {'states': len(statuses), 'probe_mode_switches': dict(sorted(switches.items())),
+            'controls_unsettled': unsettled}
 
 
 KEY_COLUMNS = ['hour_index', 'timestamp', 'case', 'commitment']
@@ -418,15 +428,23 @@ def run(week, output, *, contingencies=(), contingency_file=None, voltage_limits
     its manifest.
 
     The published result set is replaced only after every requested state has
-    completed successfully. Failed runs leave the previous full result set intact.
+    completed successfully. Failed runs leave the previous full result set intact and
+    keep their partial outputs (up to and including the failing state) in
+    `<output>_failed_<UTC>/`.
     """
     started = manifest.now()
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temp_output = Path(tempfile.mkdtemp(prefix='.strength-run-', dir=output.parent))
     try:
-        counts = evaluate_temporal(week, contingencies=contingencies, out_dir=temp_output,
-                                     voltage_limits=voltage_limits, workers=workers)
+        try:
+            counts = evaluate_temporal(week, contingencies=contingencies, out_dir=temp_output,
+                                       voltage_limits=voltage_limits, workers=workers)
+        except Exception:
+            failed = output.with_name(f'{output.name}_failed_{started:%Y%m%dT%H%M%SZ}')
+            temp_output.replace(failed)
+            print(f'\nPartial outputs of the failed run kept in {failed}', flush=True)
+            raise
         output.mkdir(parents=True, exist_ok=True)
         for filename in RUN_FILES:
             source = temp_output / filename
@@ -440,6 +458,7 @@ def run(week, output, *, contingencies=(), contingency_file=None, voltage_limits
         print('\nSaved results to', output)
         print('States evaluated:', counts['states'])
         print('Probe generator mode changes (site-states):', counts['probe_mode_switches'])
+        print('States with unsettled voltage controllers:', counts['controls_unsettled'])
         return counts
     finally:
         shutil.rmtree(temp_output, ignore_errors=True)

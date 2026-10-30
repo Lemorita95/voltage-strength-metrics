@@ -13,6 +13,7 @@ import tempfile
 import unittest
 import warnings
 from pathlib import Path
+from unittest import mock
 
 import pandas as pd
 
@@ -61,6 +62,39 @@ class TestRunOutputs(unittest.TestCase):
         self.assertEqual({Path(p).name for p in record['outputs_sha256']}, set(rsm.RUN_FILES))
         for key in ('run_id', 'git_commit', 'uncommitted_changes', 'of_record', 'config'):
             self.assertIn(key, record)
+
+    def test_controls_settled_flag(self):
+        summary = self.files['run_summary.csv']
+        for network in ('base', 'ibr'):
+            self.assertIn(f'{network}_controls_settled', summary.columns)
+        record = json.loads((self.raw / 'manifest.json').read_text())
+        self.assertEqual(set(record['controls_unsettled']), {'base', 'ibr'})
+
+
+class TestFailedRun(unittest.TestCase):
+
+    def test_failed_state_keeps_partial_outputs(self):
+        week = select_week(read_se3(SE3_FILE)).iloc[:1]
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(rsm, 'augment_network', side_effect=ValueError('boom')), \
+                contextlib.redirect_stdout(io.StringIO()):
+            raw = Path(tmp) / 'raw'
+            with self.assertRaisesRegex(RuntimeError, r'hour=0, .*case=intact: boom'):
+                rsm.run(week, raw, workers=1)
+            self.assertFalse(raw.exists())
+            [failed] = Path(tmp).glob('raw_failed_*')
+            summary = pd.read_csv(failed / 'run_summary.csv', keep_default_na=False)
+        self.assertEqual(len(summary), 1)  # stops at the first failing state
+        row = summary.iloc[0]
+        self.assertEqual(row['error'], 'boom')
+        self.assertFalse(row['base_pf_ok'])
+        self.assertFalse(row['ibr_pf_ok'])
+
+    def test_power_flow_error_names_network(self):
+        net = rsm.reference_network()
+        with mock.patch.object(rsm.PowerFlow, 'solve_power_flow', return_value=None):
+            with self.assertRaisesRegex(RuntimeError, r'^base power flow failed \(37-bus network\)$'):
+                rsm.solve_pf(net, 'base')
 
 
 if __name__ == '__main__':

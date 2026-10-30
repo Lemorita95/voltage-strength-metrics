@@ -41,7 +41,7 @@ def solved_state(ibr):
     net = prepare_network(1.0, sequential_dispatch(target, limits), limits)
     if ibr:
         augment_network(net)
-    v, pf = quiet(solve_pf, net)
+    v, pf = quiet(solve_pf, net, 'ibr' if ibr else 'base')
     return net, v, pf
 
 

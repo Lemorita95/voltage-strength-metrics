@@ -103,6 +103,13 @@ class TapControllerTest(unittest.TestCase):
         self.assertEqual(c.taps, taps)
         self.assertEqual(pf.control_steps, {})
 
+    def test_controls_settled_flag(self):
+        # the raised band takes several tap steps (one per pass)
+        pf, _ = solve(self.raised_band_case()[0])
+        self.assertTrue(pf.controls_settled)
+        pf, _ = solve(self.raised_band_case()[0], max_control_passes=1)
+        self.assertFalse(pf.controls_settled)
+
 
 class VoltageLimitsTest(unittest.TestCase):
     def setUp(self):
