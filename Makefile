@@ -1,8 +1,5 @@
 export PYTHONUTF8 := 1
 
-# bash for `set -o pipefail` in `strength` (.SHELLFLAGS needs GNU make >= 3.82; macOS has 3.81)
-SHELL := /bin/bash
-
 PYTHON ?= python
 
 # VoltageLimits preset used to flag out-of-band states (models/VoltageLimits.py PRESETS)
@@ -20,6 +17,7 @@ FIGURES := figures/glover37
 
 # one log per `make strength` run (git-ignored)
 LOGS := logs
+STRENGTH_LOG := $(LOGS)/strength_$(shell date -u +%Y%m%dT%H%M%SZ).log
 
 
 .PHONY: help case strength validate screen simulate analyze report layout \
@@ -58,11 +56,31 @@ case:
 
 strength:
 	@mkdir -p $(LOGS)
-	@log=$(LOGS)/strength_$$(date -u +%Y%m%dT%H%M%SZ).log; \
-	echo "Logging to $$log"; \
-	set -o pipefail; export PYTHONUNBUFFERED=1; \
-	{ $(MAKE) validate && $(MAKE) screen && $(MAKE) simulate \
-		&& $(MAKE) analyze && $(MAKE) report; } 2>&1 | tee "$$log"
+	@: > $(STRENGTH_LOG)
+	@echo "Starting the strength run..."
+
+	@echo "[1/5] RUNNING: PowerWorld validation (E0)"
+	@$(MAKE) validate >> $(STRENGTH_LOG) 2>&1 || { echo "[1/5] FAILED, see $(STRENGTH_LOG)"; exit 1; }
+	@echo "[1/5] DONE:    PowerWorld validation (E0)"
+
+	@echo "[2/5] RUNNING: N-1 screening"
+	@$(MAKE) screen >> $(STRENGTH_LOG) 2>&1 || { echo "[2/5] FAILED, see $(STRENGTH_LOG)"; exit 1; }
+	@echo "[2/5] DONE:    N-1 screening"
+
+	@echo "[3/5] RUNNING: temporal metrics run"
+	@$(MAKE) simulate >> $(STRENGTH_LOG) 2>&1 || { echo "[3/5] FAILED, see $(STRENGTH_LOG)"; exit 1; }
+	@echo "[3/5] DONE:    temporal metrics run"
+
+	@echo "[4/5] RUNNING: analysis"
+	@$(MAKE) analyze >> $(STRENGTH_LOG) 2>&1 || { echo "[4/5] FAILED, see $(STRENGTH_LOG)"; exit 1; }
+	@echo "[4/5] DONE:    analysis"
+
+	@echo "[5/5] RUNNING: report"
+	@$(MAKE) report >> $(STRENGTH_LOG) 2>&1 || { echo "[5/5] FAILED, see $(STRENGTH_LOG)"; exit 1; }
+	@echo "[5/5] DONE:    report"
+
+	@echo "Strength run complete."
+	@echo "Log file: $(STRENGTH_LOG)"
 
 
 validate:
