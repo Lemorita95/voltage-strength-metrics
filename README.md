@@ -2,8 +2,6 @@
 
 Reproducible code, public data, and results for a time-ordered comparison of four system-strength screening metrics (SCR, WSCR, ESCR, SDSCR) at three IBR sites added to the Glover 37-bus benchmark, over a 168-hour week and the full N-1 line set.
 
-Continues [`Lemorita95/spatial-short-circuit-level-field`](https://github.com/Lemorita95/spatial-short-circuit-level-field) at commit `3fed033`, whose history holds the earlier development and the previous results.
-
 ## Reproduce
 
 Developed with Python 3.14.
