@@ -49,7 +49,7 @@ SE3_LOAD_COLUMN = "SE3"
 #               [0, 1] set to meet the target; the slack takes the rest. When the units'
 #               MWMin alone exceeds the target (s = 0) the slack exports (slack_exporting).
 # Both dispatch demand on the 37-bus network and demand - the state's IBR output
-# (network.ibr_output_mw) on the 46-bus one.
+# (network.ibr_output) on the 46-bus one.
 SEQUENTIAL, ALL_ONLINE = "sequential", "all_online"
 COMMITMENT_RULES = (SEQUENTIAL, ALL_ONLINE)
 
@@ -119,7 +119,7 @@ SITES = (
     IBRSite(16, 45.0, 1601, 1602, 1603),
 )
 # IBR active output in every state, as a fraction of rated; applied per state by
-# network.ibr_output_mw, the hook for a time-varying output (e.g. an irradiance profile).
+# network.ibr_output, the hook for a time-varying output (e.g. an irradiance profile).
 # 1.0: rated, the worst case: the most synchronous generation displaced (Gate 4 ran 0.8).
 # Metric denominators always use rated MW (AS_RUN), whatever the output.
 IBR_OUTPUT_FRACTION = 1.0
@@ -151,7 +151,7 @@ METRIC_DEFINITIONS = {
              "source": "IEEE 2800-2022"},
     "ESCR": {"formula": r"$S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$",
              "interaction": r"$\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$",
-             "source": "CIGRE multi-infeed brochure, eq. (1-4), $Q_f = 0$"},
+             "source": "CIGRE TB 364, eq. (1-4), $Q_f = 0$"},
     "SDSCR": {"formula": r"$|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$",
               "interaction": r"$w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$",
               "source": "Wu et al. (2018)"},
@@ -162,10 +162,13 @@ METRIC_DEFINITIONS = {
 # actual pre-fault state. Impedances come from the solver's Y_SCC builder.
 FAULT_Z_PU = 1e-6
 
-# ESCR is CIGRE's multi-infeed ESCR (eq. 1-4), with Qf = 0 (no filters or capacitors):
-#   ESCR_i = SCC_i / (P_i + sum_j MIIF_ji * P_j),   MIIF_ji = dV_j / dV_i, disturbance at i.
+# ESCR is CIGRE TB 364's MIESCR (eq. 1-4) with Qf = 0 (no filters or capacitors), = IEEE 2800
+# SCRIF = Fingrid's ESCR:
+#   ESCR_i = SCC_i / (P_i + sum_j MIIF_ji * P_j),   MIIF_ji = dV_j / dV_i, disturbance at i
+#   (TB 364 Table 1-1).
 # Each MIIF construction is one ESCR `variant`:
-#   impedance        |Z_ji / Z_ii|, the instant response (CIGRE): the reference
+#   impedance        |Z_ji / Z_ii|: the voltage-step response with no control action, which
+#                    TB 364 equates with the impedance-matrix form (2.5.2.2, 3.3.3.1): the reference
 #   probe_<step>     power-flow voltage step of <step> at bus i (E3 robustness)
 IF_STEPS = (0.005, 0.01, 0.02)
 IMPEDANCE_VARIANT = "impedance"

@@ -160,13 +160,14 @@ class WSCR(_MetricHistory):
 
 @dataclass
 class ESCR(_MetricHistory):
-    """CIGRE multi-infeed ESCR (eq. 1-4) at the MV evaluation buses, with Qf = 0:
+    """CIGRE TB 364 multi-infeed ESCR (MIESCR, eq. 1-4) at the MV evaluation buses, with Qf = 0:
 
         ESCR_i = SCMVA_i / (P_i + sum_j MIIF_ji * P_j),   MIIF_ji = dV_j / dV_i,
 
     a disturbance at bus i. The MIIF is evaluated in several ways (variants), all
     sharing the state's SCMVA:
-      'impedance'   |Z_ji / Z_ii| from Y_SCC: the instant network response (CIGRE)
+      'impedance'   |Z_ji / Z_ii| from Y_SCC: the voltage-step response with no control
+                    action, equated by TB 364 with the impedance-matrix form
       probe step s  a temporary ideal numerical PV probe holds bus i at (1 + s) times
                     its pre-fault voltage magnitude in a power flow; IF[j,i] =
                     | |V_j(new)| - |V_j(base)| | / | |V_i(new)| - |V_i(base)| |.
