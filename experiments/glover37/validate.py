@@ -468,7 +468,7 @@ def validate_all() -> None:
 
 
 def main() -> None:
-    started = manifest.now()
+    started = manifest.start()
     for state in E0_STATES:
         print(f"Solving {state}")
         save_state(state, solve_state(state))

@@ -760,7 +760,7 @@ def build_summary(data, ctx, cases):
 
 
 def run(input_dir=DEFAULT_INPUT, output_dir=DEFAULT_OUTPUT):
-    started = manifest.now()
+    started = manifest.start()
     input_dir, output_dir = Path(input_dir).resolve(), Path(output_dir).resolve()
     if input_dir == output_dir:
         raise ValueError("Output directory must differ from the input directory")

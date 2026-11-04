@@ -28,6 +28,19 @@ def now():
     return datetime.now(timezone.utc)
 
 
+@dataclasses.dataclass(frozen=True)
+class Start:
+    """When a stage started, and the code it ran: the git state is read here, before the
+    stage writes anything, so its own tracked outputs (figures, tables) cannot mark it dirty."""
+    time: datetime
+    commit: str | None
+    dirty: bool
+
+
+def start():
+    return Start(now(), *git_state())
+
+
 def git_state():
     """(commit, uncommitted changes outside results/)."""
     def git(*args):
@@ -72,18 +85,18 @@ def files(paths):
 
 
 def write(out_dir, stage, *, started, inputs=(), outputs=(), extra=None):
-    """Write out_dir/manifest.json; returns the manifest dict."""
-    commit, dirty = git_state()
+    """Write out_dir/manifest.json; returns the manifest dict. started: start() of the stage."""
+    commit, dirty = started.commit, started.dirty
     finished = now()
     record = {
-        'run_id': f'{started:%Y%m%dT%H%M%SZ}-{(commit or "nogit")[:7]}',
+        'run_id': f'{started.time:%Y%m%dT%H%M%SZ}-{(commit or "nogit")[:7]}',
         'stage': stage,
         'git_commit': commit,
         'uncommitted_changes': dirty,
         'of_record': commit is not None and not dirty,
-        'started_utc': started.isoformat(),
+        'started_utc': started.time.isoformat(),
         'finished_utc': finished.isoformat(),
-        'seconds': round((finished - started).total_seconds(), 1),
+        'seconds': round((finished - started.time).total_seconds(), 1),
         'versions': {'python': platform.python_version(), 'numpy': np.__version__,
                      'scipy': scipy.__version__, 'pandas': pd.__version__},
         'inputs_sha256': files(inputs),

@@ -341,7 +341,7 @@ FLOATS = {"f1a_network": plot_network, "f1b_plant": plot_plant_chain, "f2a_load"
 
 
 def run(png=False):
-    started = manifest.now()
+    started = manifest.start()
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     written = []

@@ -439,7 +439,7 @@ def run(week, output, *, contingencies=(), contingency_file=None, voltage_limits
     keep their partial outputs (up to and including the failing state) in
     `<output>_failed_<UTC>/`.
     """
-    started = manifest.now()
+    started = manifest.start()
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temp_output = Path(tempfile.mkdtemp(prefix='.strength-run-', dir=output.parent))
@@ -448,7 +448,7 @@ def run(week, output, *, contingencies=(), contingency_file=None, voltage_limits
             counts = evaluate_temporal(week, contingencies=contingencies, out_dir=temp_output,
                                        voltage_limits=voltage_limits, workers=workers)
         except Exception:
-            failed = output.with_name(f'{output.name}_failed_{started:%Y%m%dT%H%M%SZ}')
+            failed = output.with_name(f'{output.name}_failed_{started.time:%Y%m%dT%H%M%SZ}')
             temp_output.replace(failed)
             print(f'\nPartial outputs of the failed run kept in {failed}', flush=True)
             raise
