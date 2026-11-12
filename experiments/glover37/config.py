@@ -146,15 +146,15 @@ EVAL_POINT = {"SCR": ("POI", HV_KV), "WSCR": ("POI", HV_KV),
 # fault (SCC_NR) at the actual pre-fault state; P: rated MW; Z: Y_SCC^-1 (builder).
 METRIC_DEFINITIONS = {
     "SCR": {"formula": r"$S_i / P_i$", "interaction": "none",
-            "source": "IEEE 2800-2022"},
+            "source": "IEEE 2800-2022", "cite": "ieee2800"},
     "WSCR": {"formula": r"$\sum_i S_i P_i \,/\, (\sum_i P_i)^2$", "interaction": r"weights $P_i$",
-             "source": "IEEE 2800-2022"},
+             "source": "IEEE 2800-2022", "cite": "ieee2800"},
     "ESCR": {"formula": r"$S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$",
              "interaction": r"$\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$",
-             "source": "CIGRE TB 364, eq. (1-4), $Q_f = 0$"},
+             "source": "CIGRE TB 364, eq. (1-4), $Q_f = 0$", "cite": "cigre364"},
     "SDSCR": {"formula": r"$|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$",
               "interaction": r"$w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$",
-              "source": "Wu et al. (2018)"},
+              "source": "Wu et al. (2018)", "cite": "wu2018"},
 }
 
 # Short circuit (SCC_NR): SCMVA = S_BASE_MVA * V_n * |I_f| with V_n = 1 pu, from a

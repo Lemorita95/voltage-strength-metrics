@@ -245,16 +245,22 @@ def table_conventions():
         rows.append({"metric": metric, "network": NETWORK_NAME[NETWORK[metric]],
                      "evaluated_at": point, "kV": kv, "definition": d["formula"],
                      "interaction": d["interaction"], "denominator": f"{AS_RUN[metric]} MW",
-                     "source": d["source"]})
+                     "source": d["source"], "cite": d["cite"]})
     t = pd.DataFrame(rows)
     body = "\n".join(
-        f"{r.metric} & {r.definition} \\\\\n"
-        f" & \\footnotesize {r.network}, {r.evaluated_at}; {r.interaction}; {r.source} \\\\[2pt]"
+        f"{r.metric} & {r.definition} & {'yes' if r.network == NETWORK_NAME['ibr'] else 'no'} & "
+        f"{r.evaluated_at} & \\cite{{{r.cite}}} \\\\"
         for r in t.itertuples())
-    # needs \\usepackage{array,booktabs} in the paper
-    latex = ("\\begin{tabular}{@{}l >{\\raggedright\\arraybackslash}p{0.82\\linewidth}@{}}\n\\toprule\n"
-             "Metric & Definition; network, evaluation point; interaction; source \\\\\n\\midrule\n"
-             f"{body}\n\\bottomrule\n\\end{{tabular}}\n")
+    # interaction factors and conventions not visible in the formulas, as a note under the rows
+    note = "; ".join(d["interaction"] for d in METRIC_DEFINITIONS.values() if d["interaction"].startswith("$"))
+    note += "; $Q_f = 0$ in ESCR; $P$: rated active power."
+    # needs \\usepackage{booktabs} in the paper
+    latex = ("\\setlength{\\tabcolsep}{3pt}\n"
+             "\\begin{tabular}{@{}llllc@{}}\n\\toprule\n"
+             "Metric & Definition & IBR & Point & Ref. \\\\\n\\midrule\n"
+             f"{body}\n\\midrule\n"
+             f"\\multicolumn{{5}}{{@{{}}p{{\\linewidth}}@{{}}}}{{\\scriptsize {note}}} \\\\\n"
+             "\\bottomrule\n\\end{tabular}\n")
     return t, latex
 
 
