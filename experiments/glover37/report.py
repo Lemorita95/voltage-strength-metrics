@@ -232,7 +232,7 @@ def plot_plant_chain(width_in=COLUMN_IN):
     return fig
 
 
-NETWORK_NAME = {"base": "37-bus (no IBR)", "ibr": "46-bus (with IBR)"}
+NETWORK_NAME = {"base": "no IBR", "ibr": "with IBR"}
 
 
 def table_conventions():
