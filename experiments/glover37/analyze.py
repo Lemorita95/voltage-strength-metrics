@@ -20,20 +20,20 @@ Common basis: SCMVA_i from the short-circuit solver, Z = Y_SCC^-1 from its build
 
 Isolating terms. Each metric m is recomputed from its recorded terms as
 
-    m_noV   |V| = 1 pu: SCMVA replaced by 100 / |Z_ii|, coupling kept
-    m_noC   coupling removed (MIIF = 0, w = 0), |V| kept
+    m_noV   |V| = 1 pu: SCMVA replaced by 100 / |Z_ii|, interaction term kept
+    m_noC   interaction term removed (MIIF = 0, w = 0), |V| kept
     m_Z     both removed: Z_ii only
 
 so a change in ln m between two states (hours or scenarios) splits exactly into
 
     Δln m = (Δln m - Δln m_noV) + (Δln m_noV - Δln m_Z) + Δln m_Z
-             |V| part              coupling part           Z_ii part
+             |V| part              interaction part        Z_ii part
 
 For SCR, WSCR and ESCR the |V| part is ln(SCMVA |Z_ii| / 100) = ln|V| plus the
-solver's fault-impedance term (about 1e-5). SCR and WSCR have no coupling term
-(m_noC = m, m_noV = m_Z).
+solver's fault-impedance term (about 1e-5). SCR and WSCR have no interaction term
+(m_noC = m, m_noV = m_Z). Code names keep the older word: `dln_coupling`, `coupling_load`.
 
-Coupling load, the interaction a site carries relative to its own power:
+Interaction load, the interaction a site carries relative to its own power:
     ESCR  k_i = Σ IF_ji P_j / P_i          SDSCR  k_i = |P_i + Σ w_ij P_j| / P_i - 1
 An outage that lowers k raises the metric while the network weakens; whether that
 explains a metric's "stronger" hours is tested by removing the coupling term (C7).
@@ -391,12 +391,12 @@ def _explain(in_b):
     if in_b["m"]:
         return "commitment"
     if in_b["noV"] and in_b["noC"]:
-        return "|V| or coupling"
+        return "|V| or interaction"
     if in_b["noV"]:
         return "|V|"
     if in_b["noC"]:
-        return "coupling"
-    return "|V| and coupling"
+        return "interaction"
+    return "|V| and interaction"
 
 
 def d1_weakest_hour(values, ctx, cases):
@@ -687,7 +687,7 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         "d4_hourly")
 
     c = "C6 / D4(b): SCR and WSCR follow the network"
-    c7 = "C7 / D4(c): the coupling metrics occasionally oppose it"
+    c7 = "C7 / D4(c): the metrics with an interaction term occasionally oppose it"
     for metric in METRICS:
         g = d4h[d4h["metric"] == metric]
         claim = c if metric in ("SCR", "WSCR") else c7
@@ -700,10 +700,10 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         add(claim, f"{metric}: largest change toward stronger", pct(g["r"].max(), 2), "d4_hourly")
     for metric in ("SDSCR", "ESCR"):
         part = d4[d4["metric"] == metric]
-        add(c7, f"{metric}: stronger hours where the coupling load falls",
+        add(c7, f"{metric}: stronger hours where the interaction load falls",
             f"{int(part['n_stronger_coupling_load_falls'].sum())}/{int(part['n_hours_stronger'].sum())}", "d4_outage")
         for label, col in (("as computed", "share_hours_stronger"), ("|V| = 1 pu", "share_hours_stronger_V_1pu"),
-                           ("coupling removed", "share_hours_stronger_coupling_removed"),
+                           ("interaction term removed", "share_hours_stronger_coupling_removed"),
                            ("Z_ii only", "share_hours_stronger_Z_ii_only")):
             add(c7, f"{metric}: share of hours stronger, {label}", pct(part[col].mean()), "d4_outage")
 

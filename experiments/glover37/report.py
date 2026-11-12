@@ -6,6 +6,7 @@ Report stage: the paper's floats and the generated report of the system-strength
     F2a  load scale over the intact week, minimum and peak load  (D1, RQ2, D5)
     F2b  where each metric is lowest, E1 against E5              (D1, RQ2, D5)
     F3   metric change against the network's change, per outage (D4)
+    F4   ESCR's outage change, impedance against voltage-step interaction factor (C8, E3)
     T1   metric conventions, generated from config.py
     report.md  the claims C1-C9 with their numbers, computed from the analysis tables
 
@@ -15,7 +16,7 @@ Usage
     python -m experiments.glover37.report --png
 
 Inputs:  results/glover37/raw/ and results/glover37/analysis/
-Outputs: figures/glover37/{f1a,f1b,f2a,f2b,f3}*.pdf, t1_conventions.{tex,csv};
+Outputs: figures/glover37/{f1a,f1b,f2a,f2b,f3,f4}*.pdf, t1_conventions.{tex,csv};
          results/glover37/report/report.md and manifest.json
 """
 
@@ -30,11 +31,13 @@ import pandas as pd
 
 from experiments.glover37 import layout, manifest
 from experiments.glover37.config import (
-    ALL_ONLINE, ANALYSIS_DIR, AS_RUN, F3_FLOOR_PCT, EVAL_BUS, EVAL_POINT, FIGURES_DIR, INTACT, METRIC_DEFINITIONS,
-    METRICS, NETWORK, RAW_DIR, REFERENCE_VARIANT, RESULTS_ROOT, SEQUENTIAL, SITES,
+    ALL_ONLINE, ANALYSIS_DIR, AS_RUN, AUDITED_PROBE, F3_FLOOR_PCT, EVAL_BUS, EVAL_POINT, FIGURES_DIR, IF_STEPS,
+    INTACT, MATERIAL_PCT, METRIC_DEFINITIONS, METRICS, NETWORK, RAW_DIR, REFERENCE_VARIANT, RESULTS_ROOT,
+    SEQUENTIAL, SITES, probe_variant,
 )
 
 REPORT_DIR = RESULTS_ROOT / "report"
+IF_STEP_OF = {probe_variant(s): s for s in IF_STEPS}  # probe variant name -> relative voltage step
 
 
 SITE_IDS = tuple(str(s.host_bus) for s in SITES)
@@ -311,6 +314,41 @@ def plot_outage(path=ANALYSIS_DIR / "d4_hourly.csv", floor=F3_FLOOR_PCT):
     return fig
 
 
+PROBE_INK = "#c0573e"
+
+
+def plot_interaction_factor(path=ANALYSIS_DIR / "miif_hourly.csv", probe=AUDITED_PROBE):
+    """F4 (C8): cumulative share of outage-hours by ESCR's change under the outage, all sites
+    and corridors pooled, impedance interaction factor against the voltage-step probe. The
+    network-only change is never materially positive (C5), so the shaded region, ESCR more
+    than MATERIAL_PCT stronger, is ESCR opposing the network."""
+    d = pd.read_csv(path, dtype={"site": str})
+    lines = {REFERENCE_VARIANT: (INK, "impedance"),
+             probe: (PROBE_INK, f"voltage step {100 * IF_STEP_OF[probe]:g} %")}
+    r = {v: np.sort(100 * d.loc[d["variant"] == v, "r"].to_numpy()) for v in lines}
+    lo = float(np.floor(min(x.min() for x in r.values()) / 5) * 5)
+    hi = float(np.ceil(max(x.max() for x in r.values()) / 5) * 5)
+    fig, ax = plt.subplots(figsize=(3.5, 2.3))
+    ax.axvspan(MATERIAL_PCT, hi, color=OPPOSITE, linewidth=0, zorder=0)
+    ax.axvline(0, color=RULE, linewidth=0.7, zorder=1)
+    for variant, (color, label) in lines.items():
+        x = r[variant]
+        ax.step(x, np.arange(1, len(x) + 1) / len(x), where="post", color=color, linewidth=1.3,
+                label=label, zorder=2)
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(-0.02, 1.02)
+    ax.set_xlabel("ESCR change under the outage [%]", fontsize=7, color=FAINT)
+    ax.set_ylabel("share of outage-hours", fontsize=7, color=FAINT)
+    ax.text(hi - 2, 0.45, "outage makes\nESCR stronger", fontsize=6.5, color=FAINT, ha="right", va="center")
+    ax.legend(fontsize=6.5, frameon=False, loc="center left", bbox_to_anchor=(0.0, 0.6), labelcolor=INK)
+    ax.grid(color=GRID_F2, linewidth=0.6)
+    ax.set_axisbelow(True)
+    ax.tick_params(length=0, labelsize=7, colors=FAINT)
+    for side in ("top", "right", "left", "bottom"):
+        ax.spines[side].set_visible(False)
+    return fig
+
+
 # =============================================================================
 # report.md: the claims and their numbers (text requirements, C1-C9)
 # =============================================================================
@@ -325,7 +363,7 @@ def build_report(analysis_dir=ANALYSIS_DIR, raw_dir=RAW_DIR):
              f"- raw run `{raw_m.get('run_id')}`, analysis run `{ana_m.get('run_id')}`, commit "
              f"`{(raw_m.get('git_commit') or '')[:7]}`, of record: **{raw_m.get('of_record')}**",
              "- every number below is a row of `analysis/summary.csv` (claim, item, result, source table)",
-             "- floats: F1a/F1b network and plant, F2a/F2b intact week (E1, E5), F3 outages (E2), T1 conventions"]
+             "- floats: F1a/F1b network and plant, F2a/F2b intact week (E1, E5), F3 outages (E2), F4 interaction factor (E3), T1 conventions"]
     for claim, g in rows.groupby("claim", sort=False):
         lines += ["", f"## {claim}"]
         lines += [f"- {r.item}: **{r.result}** ({r.table})" for r in g.itertuples()]
@@ -337,7 +375,8 @@ def build_report(analysis_dir=ANALYSIS_DIR, raw_dir=RAW_DIR):
 # =============================================================================
 
 FLOATS = {"f1a_network": plot_network, "f1b_plant": plot_plant_chain, "f2a_load": plot_load,
-          "f2b_minima": plot_minima, "f3_outage": plot_outage}
+          "f2b_minima": plot_minima, "f3_outage": plot_outage,
+          "f4_interaction_factor": plot_interaction_factor}
 
 
 def run(png=False):

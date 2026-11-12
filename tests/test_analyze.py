@@ -77,10 +77,10 @@ class TestPlantedLogic(unittest.TestCase):
         self.assertEqual(row['t_star'], '5')
         self.assertEqual(row['explanation'], '|V|')
 
-    def test_coupling_exception(self):
-        dip = np.array([2.0, 2.1, 2.2, 2.3, 2.4, 1.5])  # coupling dip at hour 5
+    def test_interaction_exception(self):
+        dip = np.array([2.0, 2.1, 2.2, 2.3, 2.4, 1.5])  # interaction-term dip at hour 5
         row = self.d1_row({('m', 'ESCR', '21'): dip, ('noV', 'ESCR', '21'): dip})
-        self.assertEqual(row['explanation'], 'coupling')
+        self.assertEqual(row['explanation'], 'interaction')
 
     def test_split_is_exact(self):
         rng = np.random.default_rng(1)

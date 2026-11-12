@@ -6,7 +6,7 @@ __pycache__
 *.pyc
 
 logs/
-IEEE-conference-template-062824/
 tasks.json
 current_research_handoff/
 results/
+paper/build/
