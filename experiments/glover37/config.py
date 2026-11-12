@@ -140,8 +140,8 @@ EVAL_BUS = {
     "SDSCR": {str(s.host_bus): s.sdscr_bus for s in SITES},
 }
 # Evaluation point and voltage level of each metric (T1)
-EVAL_POINT = {"SCR": ("host bus", HV_KV), "WSCR": ("host bus", HV_KV),
-              "ESCR": ("padmount", MV_KV), "SDSCR": ("converter terminal", LV_KV)}
+EVAL_POINT = {"SCR": ("POI", HV_KV), "WSCR": ("POI", HV_KV),
+              "ESCR": ("MV bus", MV_KV), "SDSCR": ("converter terminal", LV_KV)}
 # Definitions as computed (T1, LaTeX). S_i: SCMVA = S_base |I_f| (V_n = 1 pu) from a bolted
 # fault (SCC_NR) at the actual pre-fault state; P: rated MW; Z: Y_SCC^-1 (builder).
 METRIC_DEFINITIONS = {

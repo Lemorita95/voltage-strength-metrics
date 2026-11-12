@@ -202,8 +202,8 @@ def plot_network(width_in=COLUMN_IN):
 def plot_plant_chain(width_in=COLUMN_IN):
     """F1b: one plant's connection, and where each metric is evaluated."""
     fig, ax = plt.subplots(figsize=(width_in, 1.2))
-    nodes = [(0.0, "host bus", "69 kV", ("SCR", "WSCR")), (1.6, "collector", "34.5 kV", ()),
-             (3.2, "padmount", "34.5 kV", ("ESCR",)), (4.8, "terminal", "0.69 kV", ("SDSCR",))]
+    nodes = [(0.0, "POI", "69 kV", ("SCR", "WSCR")), (1.6, "collector", "34.5 kV", ()),
+             (3.2, "MV bus", "34.5 kV", ("ESCR",)), (4.8, "terminal", "0.69 kV", ("SDSCR",))]
     links = [(0.0, 1.6, "transformer"), (1.6, 3.2, "feeder"), (3.2, 4.8, "transformer")]
     for x0, x1, kind in links:
         ax.plot([x0, x1], [0, 0], color=INK, linewidth=0.9, zorder=1)
@@ -243,7 +243,7 @@ def table_conventions():
         point, kv = EVAL_POINT[metric]
         d = METRIC_DEFINITIONS[metric]
         rows.append({"metric": metric, "network": NETWORK_NAME[NETWORK[metric]],
-                     "evaluated_at": f"{point}, {kv:g} kV", "definition": d["formula"],
+                     "evaluated_at": point, "kV": kv, "definition": d["formula"],
                      "interaction": d["interaction"], "denominator": f"{AS_RUN[metric]} MW",
                      "source": d["source"]})
     t = pd.DataFrame(rows)
