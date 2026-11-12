@@ -1,14 +1,13 @@
-\begin{tabular}{@{}l >{\raggedright\arraybackslash}p{0.82\linewidth}@{}}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}llllc@{}}
 \toprule
-Metric & Definition; network, evaluation point; interaction; source \\
+Metric & Definition & IBR & Point & Ref. \\
 \midrule
-SCR & $S_i / P_i$ \\
- & \footnotesize no IBR, POI; none; IEEE 2800-2022 \\[2pt]
-WSCR & $\sum_i S_i P_i \,/\, (\sum_i P_i)^2$ \\
- & \footnotesize no IBR, POI; weights $P_i$; IEEE 2800-2022 \\[2pt]
-ESCR & $S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$ \\
- & \footnotesize with IBR, MV bus; $\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$; CIGRE TB 364, eq. (1-4), $Q_f = 0$ \\[2pt]
-SDSCR & $|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$ \\
- & \footnotesize with IBR, converter terminal; $w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$; Wu et al. (2018) \\[2pt]
+SCR & $S_i / P_i$ & no & POI & \cite{ieee2800} \\
+WSCR & $\sum_i S_i P_i \,/\, (\sum_i P_i)^2$ & no & POI & \cite{ieee2800} \\
+ESCR & $S_i \,/\, (P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j)$ & yes & MV bus & \cite{cigre364} \\
+SDSCR & $|V_i|^2 \,/\, (|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|)$ & yes & converter terminal & \cite{wu2018} \\
+\midrule
+\multicolumn{5}{@{}p{\linewidth}@{}}{\scriptsize $\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$; $w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$; $Q_f = 0$ in ESCR; $P$: rated active power.} \\
 \bottomrule
 \end{tabular}
