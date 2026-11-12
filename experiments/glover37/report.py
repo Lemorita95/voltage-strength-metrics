@@ -248,18 +248,21 @@ def table_conventions():
                      "source": d["source"], "cite": d["cite"]})
     t = pd.DataFrame(rows)
     body = "\n".join(
-        f"{r.metric} & {r.definition} & {'yes' if r.network == NETWORK_NAME['ibr'] else 'no'} & "
-        f"{r.evaluated_at} & \\cite{{{r.cite}}} \\\\"
+        # strut with height and depth: room around each fraction, so only these rows grow;
+        # * marks the points evaluated on the network without the IBR plants (see note)
+        f"\\rule[-2.6ex]{{0pt}}{{6.8ex}}{r.metric} & {r.definition} & "
+        f"{r.evaluated_at}{'$^*$' if r.network == NETWORK_NAME['base'] else ''} & \\cite{{{r.cite}}} \\\\"
         for r in t.itertuples())
     # interaction factors and conventions not visible in the formulas, as a note under the rows
-    note = "; ".join(d["interaction"] for d in METRIC_DEFINITIONS.values() if d["interaction"].startswith("$"))
-    note += "; $Q_f = 0$ in ESCR; $P$: rated active power."
+    note = ("$^*$On the network without the IBR plants; ESCR and SDSCR on the network with them. "
+            + "; ".join(d["interaction"] for d in METRIC_DEFINITIONS.values() if d["interaction"].startswith("$"))
+            + "; $Q_f = 0$ in ESCR; $P$: rated active power.")
     # needs \\usepackage{booktabs} in the paper
     latex = ("\\setlength{\\tabcolsep}{3pt}\n"
-             "\\begin{tabular}{@{}llllc@{}}\n\\toprule\n"
-             "Metric & Definition & IBR & Point & Ref. \\\\\n\\midrule\n"
+             "\\begin{tabular}{@{}lllc@{}}\n\\toprule\n"
+             "Metric & Definition & Point & Ref. \\\\\n\\midrule\n"
              f"{body}\n\\midrule\n"
-             f"\\multicolumn{{5}}{{@{{}}p{{\\linewidth}}@{{}}}}{{\\scriptsize {note}}} \\\\\n"
+             f"\\multicolumn{{4}}{{@{{}}p{{\\linewidth}}@{{}}}}{{\\scriptsize {note}}} \\\\\n"
              "\\bottomrule\n\\end{tabular}\n")
     return t, latex
 
