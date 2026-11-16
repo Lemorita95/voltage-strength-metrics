@@ -200,7 +200,8 @@ def plot_week(raw_dir=RAW_DIR, width_in=COLUMN_IN):
     ax_m.set_yticks(range(len(F2_METRICS)))
     ax_m.set_yticklabels(F2_METRICS, fontsize=6.5, color=FAINT)
     ax_m.tick_params(axis="y", length=0, pad=3)
-    ax_m.grid(axis="y", color=GRID_F2, linewidth=0.6)
+    for y in range(len(F2_METRICS) - 1):  # hairlines between metric rows, not through the markers
+        ax_m.axhline(y + 0.5, color=RULE, linewidth=0.6, zorder=0)
     _week_axis(ax_m, hours, stamps)
     ax_m.tick_params(axis="x", labelsize=6.5)
     for ax, tag in ((ax_l, "a)"), (ax_m, "b)")):
