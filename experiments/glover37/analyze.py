@@ -198,9 +198,10 @@ def scenarios(contingencies):
     """Representative case per corridor (circuit 1), and {case: representative}."""
     inc = contingencies[contingencies["included"].astype(bool)]
     representative = {}
-    for _, grp in inc.groupby(inc.apply(lambda r: tuple(sorted((r.from_bus, r.to_bus))), axis=1),
-                              sort=False):
-        rep = next((r.case for r in grp.itertuples() if r.line.endswith("ckt 1")), grp["case"].iloc[0])
+    # a corridor: the parallel branches of one kind (line or transformer) between two buses
+    corridor = inc.apply(lambda r: (r.branch.split(".", 1)[0], *sorted((r.from_bus, r.to_bus))), axis=1)
+    for _, grp in inc.groupby(corridor, sort=False):
+        rep = next((r.case for r in grp.itertuples() if r.branch.endswith("ckt 1")), grp["case"].iloc[0])
         representative.update({c: rep for c in grp["case"]})
     corridors = [c for c in inc["case"] if representative[c] == c]
     return corridors, representative

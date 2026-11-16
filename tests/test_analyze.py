@@ -100,7 +100,7 @@ class TestIntegration(unittest.TestCase):
         cls._tmp = tempfile.TemporaryDirectory()
         cls.raw = Path(cls._tmp.name) / 'raw'
         cls.raw.mkdir()
-        pd.DataFrame([{'line': key, 'case': case, 'from_bus': a, 'to_bus': b, 'islands': False,
+        pd.DataFrame([{'branch': key, 'case': case, 'from_bus': a, 'to_bus': b, 'islands': False,
                        'n_hours': 3, 'n_converged_base': 3, 'n_converged_ibr': 3,
                        'failed_hours': '', 'included': True, 'reason': ''}
                       for case, (key, a, b) in LINES.items()]

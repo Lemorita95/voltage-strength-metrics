@@ -236,7 +236,8 @@ def baseline_load_mw() -> float:
 # =============================================================================
 
 def prepare_network(load_scale, dispatch, limits, contingency=None, committed=None):
-    """Load-scaled, dispatched 37-bus network with the `contingency` line out of service
+    """Load-scaled, dispatched 37-bus network with the `contingency` branch (line or
+    transformer key) out of service
     (None: intact). `committed` (generator key -> bool) defaults to dispatch > 0."""
     net = CustomNetwork(str(CASE_FILE))
     net.create_network()

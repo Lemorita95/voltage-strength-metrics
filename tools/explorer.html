@@ -353,8 +353,9 @@ let D = null, CMP = null, RAW = null, CMP_RAW = null;
 const IF_ZERO = 1e-3;   // an interaction factor below this is treated as zero
 const CASE_LABEL = c => {
   if (c === 'intact') return 'Intact';
-  const m = /^line_(\d+)_(\d+)(?:_ckt(\d+))?_out$/.exec(c);
-  return m ? `Line ${m[1]}–${m[2]}${m[3] ? ' ckt ' + m[3] : ''} out` : c.replace(/_/g, ' ');
+  const m = /^(line|transformer)_(\d+)_(\d+)(?:_ckt(\d+))?_out$/.exec(c);
+  return m ? `${m[1] === 'line' ? 'Line' : 'Transformer'} ${m[2]}–${m[3]}${m[4] ? ' ckt ' + m[4] : ''} out`
+           : c.replace(/_/g, ' ');
 };
 const CASE_SHORT = c => c === 'intact' ? 'intact' : 'outage';
 const MET = {

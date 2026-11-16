@@ -1,12 +1,12 @@
 """Simulation stage: N-1 screening and the temporal SCR/WSCR/ESCR/SDSCR run.
 
-`screen` fixes the N-1 set before any metric is computed: a line outage is
-included only if it islands no bus and both pre-fault power flows (37-bus base,
-46-bus with IBRs) converge in every hour of the week, with commitment and
-setpoints held at the intact schedule. No strength metric is evaluated there.
+`screen` fixes the N-1 set before any metric is computed: a branch outage (line or
+transformer of the 37-bus case) is included only if it islands no bus and both pre-fault
+power flows (37-bus base, 46-bus with IBRs) converge in every hour of the week, with
+commitment and setpoints held at the intact schedule. No strength metric is evaluated there.
 
 `run` evaluates the four metrics, hour by hour, for every operating state:
-the intact network and every included line outage under the sequential
+the intact network and every included branch outage under the sequential
 commitment rule (E1, E2), and the intact network with every unit online (E5).
 ESCR is evaluated with every MIIF variant (config ESCR_VARIANTS; E3).
 
@@ -23,7 +23,7 @@ Run from repository root:
 Outputs under results/glover37/raw/ by default. Every row carries its state
 (hour_index, timestamp, case, commitment); metric rows also carry `variant`
 (ESCR's MIIF construction, blank for the other metrics).
-- `contingency_set.csv` (screen): one row per line;
+- `contingency_set.csv` (screen): one row per branch (line or transformer);
 - `metrics_timeseries.csv`: one row per metric / variant / evaluation bus / state;
 - `metric_variables.csv`: the underlying voltage, SCMVA, impedance, MIIF and power terms;
 - `run_summary.csv`, `dispatch_schedule.csv`: per-state audit (incl. slack power) and dispatch;
@@ -100,14 +100,22 @@ def schedule_inputs():
 # 1. N-1 screening
 # =============================================================================
 
-def case_labels(lines):
-    """{line key: case label}; the circuit number is kept only for parallel lines."""
-    pairs = Counter(tuple(sorted((ln.bus_1, ln.bus_2))) for ln in lines.values())
+def candidate_branches(net):
+    """{branch key: branch} of every line and transformer, the N-1 candidates."""
+    return net.lines | net.transformers
+
+
+def case_labels(branches):
+    """{branch key: case label}, e.g. line_39_47_out, transformer_12_40_ckt1_out; the circuit
+    number is kept only for parallel branches of the same kind."""
+    kind = {key: key.split('.', 1)[0] for key in branches}  # 'line' or 'transformer'
+    pairs = Counter((kind[key], *sorted((br.bus_1, br.bus_2))) for key, br in branches.items())
     labels = {}
-    for key, ln in lines.items():
-        a, b = sorted((ln.bus_1, ln.bus_2))
+    for key, br in branches.items():
+        a, b = sorted((br.bus_1, br.bus_2))
         ckt = key.rsplit('ckt', 1)[-1].strip()
-        labels[key] = f'line_{a}_{b}_ckt{ckt}_out' if pairs[(a, b)] > 1 else f'line_{a}_{b}_out'
+        stem = f'{kind[key]}_{a}_{b}'
+        labels[key] = f'{stem}_ckt{ckt}_out' if pairs[(kind[key], a, b)] > 1 else f'{stem}_out'
     return labels
 
 
@@ -136,19 +144,20 @@ def converges(net):
 
 @functools.cache
 def reference_network():
-    """Intact 37-bus network at load scale 1, the source of the candidate line set."""
+    """Intact 37-bus network at load scale 1, the source of the candidate branch set."""
     limits, base_load_mw = schedule_inputs()
     return prepare_network(1.0, sequential_dispatch(base_load_mw, limits), limits)
 
 
-def screen_line(line, week):
+def screen_branch(branch, week):
     """One row of contingency_set.csv: islanding, then convergence in every hour."""
     limits, base_load_mw = schedule_inputs()
     reference = reference_network()
-    ln = reference.lines[line]
-    row = {'line': line, 'case': case_labels(reference.lines)[line],
-           'from_bus': ln.bus_1, 'to_bus': ln.bus_2,
-           'islands': islands(reference, line), 'n_hours': len(week),
+    branches = candidate_branches(reference)
+    br = branches[branch]
+    row = {'branch': branch, 'case': case_labels(branches)[branch],
+           'from_bus': br.bus_1, 'to_bus': br.bus_2,
+           'islands': islands(reference, branch), 'n_hours': len(week),
            'n_converged_base': 0, 'n_converged_ibr': 0, 'failed_hours': ''}
     if not row['islands']:
         failed = []
@@ -157,9 +166,9 @@ def screen_line(line, week):
             output = ibr_output(r)
             ibr_mw = sum(p for p, _ in output.values())
             ok_base = converges(prepare_network(
-                r.load_scale, sequential_dispatch(demand, limits), limits, line))
+                r.load_scale, sequential_dispatch(demand, limits), limits, branch))
             aug_net = prepare_network(r.load_scale, sequential_dispatch(demand - ibr_mw, limits),
-                                      limits, line)
+                                      limits, branch)
             augment_network(aug_net, output)  # rebuilds the Y-bus
             ok_ibr = converges(aug_net)
             row['n_converged_base'] += ok_base
@@ -175,11 +184,11 @@ def screen_line(line, week):
 
 
 def screen(week, workers=WORKERS):
-    lines = list(reference_network().lines)
+    branches = list(candidate_branches(reference_network()))
     rows = []
-    with parallel_map(functools.partial(screen_line, week=week), lines, workers) as results:
+    with parallel_map(functools.partial(screen_branch, week=week), branches, workers) as results:
         for k, row in enumerate(results, 1):
-            print(f"[{k:02d}/{len(lines)}] {row['case']}: "
+            print(f"[{k:02d}/{len(branches)}] {row['case']}: "
                   f"{'included' if row['included'] else 'excluded (' + row['reason'] + ')'}",
                   flush=True)
             rows.append(row)
@@ -187,14 +196,14 @@ def screen(week, workers=WORKERS):
 
 
 def read_contingencies(path, cases=None):
-    """[(case label, line key)] for the included rows of contingency_set.csv."""
+    """[(case label, branch key)] for the included rows of contingency_set.csv."""
     table = pd.read_csv(path)
     table = table[table['included'].astype(bool)]
     if cases:
         if unknown := set(cases) - set(table['case']):
             raise ValueError(f'Cases not in the included contingency set: {sorted(unknown)}')
         table = table[table['case'].isin(cases)]
-    return list(zip(table['case'], table['line']))
+    return list(zip(table['case'], table['branch']))
 
 
 # =============================================================================
@@ -490,7 +499,7 @@ def main():
     screen_p, run_p = sub.choices['screen'], sub.choices['run']
     screen_p.add_argument('--output', type=Path, default=CONTINGENCY_FILE)
     run_p.add_argument('--contingencies', type=Path,
-                       help='contingency_set.csv: also evaluate every included line outage.')
+                       help='contingency_set.csv: also evaluate every included branch outage.')
     run_p.add_argument('--case', action='append', dest='cases',
                        help='With --contingencies: evaluate only this case label (repeatable).')
     run_p.add_argument('--output', type=Path, default=RAW_DIR)
@@ -505,7 +514,7 @@ def main():
         table = screen(week, args.workers)
         args.output.parent.mkdir(parents=True, exist_ok=True)
         table.to_csv(args.output, index=False)
-        print(f"\n{int(table['included'].sum())}/{len(table)} lines included; saved {args.output}")
+        print(f"\n{int(table['included'].sum())}/{len(table)} branches included; saved {args.output}")
         return
 
     if args.cases and not args.contingencies:
