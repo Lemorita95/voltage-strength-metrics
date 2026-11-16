@@ -767,6 +767,25 @@ def build_summary(data, ctx, cases):
         add("inputs", f"SHA-256 {f}", h)
     for network, b in ctx["b_count"].items():
         add("inputs", f"minimum-commitment hours B_count [{network}]", _join(sorted(b)))
+
+    # study design as run (Section III of the paper)
+    s = data["summary"]
+    start = pd.Timestamp(s.loc[s["hour_index"] == min(ctx["hours"]), "timestamp"].iloc[0])
+    add("design", "week start (UTC)", f"{start.day} {start:%B %Y}, {start:%H:%M}")
+    lam = ctx["load_scale"]
+    add("design", "load scale, minimum", f"{lam.min():.2f}")
+    add("design", "load scale, peak", f"{lam.max():.2f}")
+    for network, n in ctx["n_committed"].items():
+        add("design", f"committed units under the largest-first rule, fewest [{network}]", int(n.min()))
+        add("design", f"committed units under the largest-first rule, most [{network}]", int(n.max()))
+    con = data["contingencies"]
+    kind = con["branch"].str.split(".", n=1).str[0]
+    for k in ("line", "transformer"):
+        add("design", f"outages included [{k}]", int(con.loc[kind == k, "included"].astype(bool).sum()))
+        add("design", f"candidates [{k}]", int((kind == k).sum()))
+    add("design", "corridors", len(cases) - 1)
+    n_included = int(con["included"].astype(bool).sum())
+    add("design", "states evaluated", f"{(n_included + 2) * len(ctx['hours']):,}")
     return pd.DataFrame(rows)
 
 
