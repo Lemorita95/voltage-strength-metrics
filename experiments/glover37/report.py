@@ -161,6 +161,61 @@ def plot_minima(raw_dir=RAW_DIR):
 
 
 COLUMN_IN = 3.49  # IEEE one-column width
+SITE_OFFSET = {"21": -0.22, "48": 0.0, "16": 0.22}  # F2: sites side by side within a metric row
+
+
+def plot_week(raw_dir=RAW_DIR, width_in=COLUMN_IN):
+    """F2, one column: a) the load scale over the intact week, minimum and peak load marked;
+    b) the hour of each metric's weekly minimum per site, filled for E1 (largest-first
+    commitment), open for E5 (every unit on line); shaded: the E1 hours with the fewest
+    committed units in the row's network."""
+    series, lam, stamps, min_hours = week_data(raw_dir)
+    hours = lam.index.to_numpy()
+    fig, (ax_l, ax_m) = plt.subplots(2, 1, figsize=(width_in, 2.75), sharex=True,
+                                     gridspec_kw={"height_ratios": (1, 1.7), "hspace": 0.18})
+    ax_l.plot(hours, lam.to_numpy(), color=INK, linewidth=1.0)
+    for t, ha, va, offset in ((int(lam.idxmin()), "left", "center", (5, 0)),
+                              (int(lam.idxmax()), "right", "bottom", (0, 4))):
+        ax_l.scatter([t], [lam.loc[t]], s=18, facecolors="none", edgecolors=WINE, linewidths=0.8, zorder=3)
+        ax_l.annotate(f"{lam.loc[t]:.2f}", (t, lam.loc[t]), xytext=offset, textcoords="offset points",
+                      ha=ha, va=va, fontsize=6.5, color=WINE)
+    ax_l.set_ylim(lam.min() - 0.08, lam.max() + 0.16)  # headroom for the peak label
+    ax_l.grid(axis="y", color=GRID_F2, linewidth=0.6)
+    ax_l.tick_params(axis="y", length=0, labelsize=6.5, colors=FAINT)
+    ax_l.set_ylabel("load scale", fontsize=6.5, color=FAINT)
+    _week_axis(ax_l, hours, stamps, labels=False)
+
+    for y, metric in enumerate(F2_METRICS):
+        for first, last in _runs(min_hours[NETWORK[metric]]):
+            ax_m.fill_between([first - 0.5, last + 0.5], y - 0.42, y + 0.42, color=BAND, linewidth=0, zorder=1)
+        for site in ((GROUP,) if metric == "WSCR" else SITE_IDS):
+            color = INK if site == GROUP else SITE_COLOR[site]
+            dy = 0.0 if site == GROUP else SITE_OFFSET[site]
+            e1 = series[(SEQUENTIAL, metric, site)]
+            e5 = series[(ALL_ONLINE, metric, site)]
+            ax_m.scatter([e1.idxmin()], [y + dy], s=14, color=color, linewidths=0, zorder=3)
+            ax_m.scatter([e5.idxmin()], [y + dy], s=14, facecolors="white", edgecolors=color,
+                         linewidths=0.9, zorder=3)
+    ax_m.set_ylim(len(F2_METRICS) - 0.5, -0.5)
+    ax_m.set_yticks(range(len(F2_METRICS)))
+    ax_m.set_yticklabels(F2_METRICS, fontsize=6.5, color=FAINT)
+    ax_m.tick_params(axis="y", length=0, pad=3)
+    ax_m.grid(axis="y", color=GRID_F2, linewidth=0.6)
+    _week_axis(ax_m, hours, stamps)
+    ax_m.tick_params(axis="x", labelsize=6.5)
+    for ax, tag in ((ax_l, "a)"), (ax_m, "b)")):
+        ax.annotate(tag, (0, 1), xycoords="axes fraction", xytext=(-24, 2), textcoords="offset points",
+                    fontsize=7.5, fontweight="bold", color=INK, va="bottom")
+    handles = [plt.Line2D([], [], marker="o", linestyle="", markersize=3.5, color=SITE_COLOR[s],
+                          label=f"site {s}") for s in SITE_IDS]
+    handles += [plt.Line2D([], [], marker="o", linestyle="", markersize=3.5, color=INK, label="group"),
+                plt.Line2D([], [], marker="o", linestyle="", markersize=3.5, color=FAINT, label="largest-first"),
+                plt.Line2D([], [], marker="o", linestyle="", markersize=3.5, markerfacecolor="white",
+                           markeredgecolor=FAINT, label="all online"),
+                plt.Rectangle((0, 0), 1, 1, color=BAND, label="fewest units")]
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.07), ncol=4, frameon=False,
+               fontsize=6, labelcolor=INK, handletextpad=0.2, columnspacing=0.8)
+    return fig
 
 
 # Where each plant's converter symbol hangs off its host bus: (point on the bus, direction)
@@ -362,8 +417,30 @@ def plot_interaction_factor(path=ANALYSIS_DIR / "miif_hourly.csv", probe=AUDITED
 # numbers.tex: the paper's run numbers as LaTeX macros (never typed into the text)
 # =============================================================================
 
-# macro name -> (claim, item) of analysis/summary.csv; a renamed row fails loudly
+def _first(value):
+    """'18: |V| 18' -> '18'; '499/24192' -> '499'; '1046/24192, -63 %' -> '1046'."""
+    return value.replace(":", "/").replace(",", "/").split("/")[0].strip()
+
+
+def _range(i):
+    """'14.3 % to 47.2 %' -> part i (0 lower, 1 upper)."""
+    return lambda value: value.split(" to ")[i].strip()
+
+
+def _of(value):
+    """'472/490' -> '472 of 490', for prose."""
+    return value.replace("/", " of ")
+
+
+def _after_comma(value):
+    """'1046/24192, -63 %' -> '-63 %'."""
+    return value.split(",", 1)[1].strip()
+
+
+# macro name -> (claim, item[, transform]) of analysis/summary.csv. The claim is matched by its
+# prefix ('C1', 'design', 'captions'); a renamed or missing row fails loudly.
 NUMBER_MACROS = {
+    # design (Section III)
     "WeekStart": ("design", "week start (UTC)"),
     "LoadScaleMin": ("design", "load scale, minimum"),
     "LoadScalePeak": ("design", "load scale, peak"),
@@ -377,15 +454,86 @@ NUMBER_MACROS = {
     "TransformersAll": ("design", "candidates [transformer]"),
     "Corridors": ("design", "corridors"),
     "States": ("design", "states evaluated"),
+    # C1: weakest hour under the largest-first rule
+    "ConeIntact": ("C1", "weakest hour in the fewest-committed-units hours, intact", _of),
+    "ConeAll": ("C1", "same, all cases (intact and outages)", _of),
+    "ConeZonly": ("C1", "confirmation: Z_ii-only weakest hour in those hours", _of),
+    "ConeExceptions": ("C1", "exceptions and their explanation", _first),
+    "ConeRangeLow": ("C1", "week range per metric-site (max / min - 1)", _range(0)),
+    "ConeRangeHigh": ("C1", "week range per metric-site (max / min - 1)", _range(1)),
+    # C2: every unit online
+    "CtwoLoadLow": ("C2", "load scale at the weakest hour", _range(0)),
+    "CtwoLoadHigh": ("C2", "load scale at the weakest hour", _range(1)),
+    "CtwoZonlyHour": ("C2", "Z_ii-only weakest hour"),
+    "CtwoDeltaVLow": ("C2", "Δln |V| part, Z_ii-only to actual weakest hour", _range(0)),
+    "CtwoDeltaVHigh": ("C2", "Δln |V| part, Z_ii-only to actual weakest hour", _range(1)),
+    "CtwoDeltaZLow": ("C2", "Δln Z_ii part, same", _range(0)),
+    "CtwoDeltaZHigh": ("C2", "Δln Z_ii part, same", _range(1)),
+    "CtwoRangeLow": ("C2", "week range per metric-site (max / min - 1)", _range(0)),
+    "CtwoRangeHigh": ("C2", "week range per metric-site (max / min - 1)", _range(1)),
+    # C3: planning snapshots
+    "CthreeGapEone": ("C3", "largest gap to the weekly minimum, E1"),
+    "CthreeGapEfiveMin": ("C3", "largest gap, E5 minimum load"),
+    "CthreeGapEfiveWorse": ("C3", "largest gap, E5 worse of minimum and peak load"),
+    # C4: agreement between metrics
+    "CfourHoursEone": ("C4", "E1 weakest hours"),
+    "CfourSpanEfive": ("C4", "E5 weakest hours span"),
+    # C5: the network under an outage
+    "CfiveNetMax": ("C5", "network-only change, most strengthening"),
+    "CfiveNetMin": ("C5", "network-only change, most weakening"),
+    # C6: SCR and WSCR
+    "CsixCorrSCR": ("C6", "SCR: correlation of metric and network change"),
+    "CsixCorrWSCR": ("C6", "WSCR: correlation of metric and network change"),
+    # C7: ESCR and SDSCR
+    "CsevenCorrESCR": ("C7", "ESCR: correlation of metric and network change"),
+    "CsevenCorrSDSCR": ("C7", "SDSCR: correlation of metric and network change"),
+    "CsevenOppESCR": ("C7", "ESCR: points > 1 % stronger while the network weakens"),
+    "CsevenOppSDSCR": ("C7", "SDSCR: points > 1 % stronger while the network weakens"),
+    "CsevenShareESCR": ("C7", "ESCR: share of points > 1 % stronger"),
+    "CsevenShareSDSCR": ("C7", "SDSCR: share of points > 1 % stronger"),
+    "CsevenMaxESCR": ("C7", "ESCR: largest change toward stronger"),
+    "CsevenMaxSDSCR": ("C7", "SDSCR: largest change toward stronger"),
+    "CsevenVoneESCR": ("C7", "ESCR: points > 1 % stronger, |V| = 1 pu", _first),
+    "CsevenVoneSDSCR": ("C7", "SDSCR: points > 1 % stronger, |V| = 1 pu", _first),
+    "CsevenNoIntESCR": ("C7", "ESCR: points > 1 % stronger, interaction term removed", _first),
+    "CsevenNoIntSDSCR": ("C7", "SDSCR: points > 1 % stronger, interaction term removed", _first),
+    # C8: ESCR's interaction factor
+    "CeightImpShare": ("C8", "impedance: share of points > 1 % stronger"),
+    "CeightImpMax": ("C8", "impedance: largest change toward stronger"),
+    "CeightProbeHalfShare": ("C8", "probe_0.005: share of points > 1 % stronger"),
+    "CeightProbeOneShare": ("C8", "probe_0.01: share of points > 1 % stronger"),
+    "CeightProbeTwoShare": ("C8", "probe_0.02: share of points > 1 % stronger"),
+    "CeightProbeOneMax": ("C8", "probe_0.01: largest change toward stronger"),
+    "CeightProbeOneSameHour": ("C8", "probe_0.01: weakest hour as under impedance", _of),
+    # C9: checks
+    "CnineParallel": ("C9", "parallel circuits: same weakest hour as circuit 1", _of),
+    "CnineParallelDln": ("C9", "parallel circuits: max |Δln| against circuit 1"),
+    # captions
+    "FthreeBeyondSCR": ("captions", "F3: SCR points beyond the window (of all, lowest value)", _first),
+    "FthreeBeyondWSCR": ("captions", "F3: WSCR points beyond the window (of all, lowest value)", _first),
+    "FthreeBeyondESCR": ("captions", "F3: ESCR points beyond the window (of all, lowest value)", _first),
+    "FthreeBeyondSDSCR": ("captions", "F3: SDSCR points beyond the window (of all, lowest value)", _first),
+    "FthreeLowestSCR": ("captions", "F3: SCR points beyond the window (of all, lowest value)", _after_comma),
 }
+
+
+def _latex(value):
+    """Summary text -> LaTeX: '%' escaped with a thin space, a leading minus as math minus."""
+    value = str(value).strip().replace(" %", "\\,\\%")
+    return "$-$" + value[1:] if value.startswith("-") else value
 
 
 def numbers_tex(analysis_dir=ANALYSIS_DIR, validation_dir=VALIDATION_DIR):
     """numbers.tex: one \\newcommand per run number the paper quotes, from the analysis
     summary and the PowerWorld validation summary (largest fault-current error, %)."""
     summary = pd.read_csv(Path(analysis_dir) / "summary.csv", dtype=str, keep_default_na=False)
-    result = summary.set_index(["claim", "item"])["result"]
-    values = {name: result.loc[key] for name, key in NUMBER_MACROS.items()}
+    values = {}
+    for name, (claim, item, *transform) in NUMBER_MACROS.items():
+        rows = summary[summary["claim"].str.startswith(claim) & (summary["item"] == item)]
+        if len(rows) != 1:
+            raise KeyError(f"\\Num{name}: {len(rows)} summary rows for ({claim!r}, {item!r})")
+        value = rows["result"].iloc[0]
+        values[name] = _latex(transform[0](value) if transform else value)
     validation = pd.read_csv(Path(validation_dir) / "summary.csv")
     states = validation[validation["comparison"] == "state"]
     values["PowerWorldMaxErrorPct"] = f"{states['I_max_abs_error_pct'].max():.2g}"
@@ -420,8 +568,8 @@ def build_report(analysis_dir=ANALYSIS_DIR, raw_dir=RAW_DIR):
 # Driver
 # =============================================================================
 
-FLOATS = {"f1a_network": plot_network, "f1b_plant": plot_plant_chain, "f2a_load": plot_load,
-          "f2b_minima": plot_minima, "f3_outage": plot_outage,
+FLOATS = {"f1a_network": plot_network, "f1b_plant": plot_plant_chain, "f2_week": plot_week,
+          "f3_outage": plot_outage,
           "f4_interaction_factor": plot_interaction_factor}
 
 
