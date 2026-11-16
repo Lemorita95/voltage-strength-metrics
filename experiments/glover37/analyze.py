@@ -432,6 +432,8 @@ def d4_outage(values, ctx, corridors):
             part_v, part_c, part_z = ln["m"] - ln["noV"], ln["noV"] - ln["Z"], ln["Z"]
             # stronger: metric_contingency > metric_intact in that hour
             stronger = sign0(ln["m"]) > 0
+            # material: more than MATERIAL_PCT stronger, the C7 observation's threshold
+            material = {v: ln[v] > np.log1p(MATERIAL_PCT / 100) for v in ("m", "noV", "noC", "Z")}
             k_int, k_out = coupling_load(values, metric, site, INTACT), coupling_load(values, metric, site, case)
             r = np.expm1(ln["m"])
             rows.append({
@@ -453,6 +455,11 @@ def d4_outage(values, ctx, corridors):
                 "max_r_stronger": float(r[stronger].max()) if stronger.any() else float("nan"),
                 "median_dln_Z_ii_stronger": float(part_z[stronger].median()) if stronger.any() else float("nan"),
                 "n_stronger_coupling_load_falls": int((stronger & (sign0(k_out - k_int) < 0)).sum()),
+                "n_material": int(material["m"].sum()),
+                "n_material_V_1pu": int(material["noV"].sum()),
+                "n_material_coupling_removed": int(material["noC"].sum()),
+                "n_material_Z_ii_only": int(material["Z"].sum()),
+                "n_material_coupling_load_falls": int((material["m"] & (sign0(k_out - k_int) < 0)).sum()),
             })
     return pd.DataFrame(rows)
 
@@ -699,14 +706,17 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         add(claim, f"{metric}: points > {MATERIAL_PCT:g} % stronger while the network weakens",
             int(((g["r_network"] < 0) & (g["r"] > MATERIAL_PCT / 100)).sum()), "d4_hourly")
         add(claim, f"{metric}: largest change toward stronger", pct(g["r"].max(), 2), "d4_hourly")
+    # mechanism, on the observation's own points: > MATERIAL_PCT stronger, under each recomputed form
     for metric in ("SDSCR", "ESCR"):
         part = d4[d4["metric"] == metric]
-        add(c7, f"{metric}: stronger hours where the interaction load falls",
-            f"{int(part['n_stronger_coupling_load_falls'].sum())}/{int(part['n_hours_stronger'].sum())}", "d4_outage")
-        for label, col in (("as computed", "share_hours_stronger"), ("|V| = 1 pu", "share_hours_stronger_V_1pu"),
-                           ("interaction term removed", "share_hours_stronger_coupling_removed"),
-                           ("Z_ii only", "share_hours_stronger_Z_ii_only")):
-            add(c7, f"{metric}: share of hours stronger, {label}", pct(part[col].mean()), "d4_outage")
+        n_total = len(d4h[d4h["metric"] == metric])
+        add(c7, f"{metric}: points > {MATERIAL_PCT:g} % stronger where the interaction load falls",
+            f"{int(part['n_material_coupling_load_falls'].sum())}/{int(part['n_material'].sum())}", "d4_outage")
+        for label, col in (("as computed", "n_material"), ("|V| = 1 pu", "n_material_V_1pu"),
+                           ("interaction term removed", "n_material_coupling_removed"),
+                           ("Z_ii only", "n_material_Z_ii_only")):
+            add(c7, f"{metric}: points > {MATERIAL_PCT:g} % stronger, {label}",
+                f"{int(part[col].sum())}/{n_total}", "d4_outage")
 
     c = "C8 / RQ3 (E3): ESCR's interaction factor"
     ref = mv[mv["variant"] == REFERENCE_VARIANT].set_index(["case", "site"])["t_star"]
