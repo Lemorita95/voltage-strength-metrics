@@ -463,14 +463,8 @@ NUMBER_MACROS = {
     "Corridors": ("design", "corridors"),
     "States": ("design", "states evaluated"),
     # C1: weakest hour under the largest-first rule
-    "ConeIntact": ("C1", "weakest hour in the fewest-committed-units hours, intact", _of),
     "ConeAll": ("C1", "same, all cases (intact and outages)", _of),
-    "ConeZonly": ("C1", "confirmation: Z_ii-only weakest hour in those hours", _of),
     "ConeExceptions": ("C1", "exceptions and their explanation", _first),
-    "ConeExceptionHourFirst": ("C1", "exceptions: weakest hours", _range(0)),
-    "ConeExceptionHourLast": ("C1", "exceptions: weakest hours", _range(1)),
-    "ConeExceptionUnits": ("C1", "exceptions: committed units at their weakest hour", _range(0)),
-    "ConeExceptionGap": ("C1", "exceptions: largest gap below the minimum-commitment hours"),
     "ConeRangeLow": ("C1", "week range per metric-site (max / min - 1)", _range(0)),
     "ConeRangeHigh": ("C1", "week range per metric-site (max / min - 1)", _range(1)),
     # C2: every unit online
@@ -488,7 +482,6 @@ NUMBER_MACROS = {
     "CthreeGapEfiveMin": ("C3", "largest gap, E5 minimum load"),
     "CthreeGapEfiveWorse": ("C3", "largest gap, E5 worse of minimum and peak load"),
     # C4: agreement between metrics
-    "CfourHoursEone": ("C4", "E1 weakest hours"),
     "CfourSpanEfive": ("C4", "E5 weakest hours span"),
     # C5: the network under an outage
     "CfiveNetMax": ("C5", "network-only change, most strengthening"),
@@ -505,8 +498,6 @@ NUMBER_MACROS = {
     "CsevenShareSDSCR": ("C7", "SDSCR: share of points > 1 % stronger"),
     "CsevenMaxESCR": ("C7", "ESCR: largest change toward stronger"),
     "CsevenMaxSDSCR": ("C7", "SDSCR: largest change toward stronger"),
-    "CsevenVoneESCR": ("C7", "ESCR: points > 1 % stronger, |V| = 1 pu", _first),
-    "CsevenVoneSDSCR": ("C7", "SDSCR: points > 1 % stronger, |V| = 1 pu", _first),
     "CsevenNoIntESCR": ("C7", "ESCR: points > 1 % stronger, interaction term removed", _first),
     "CsevenNoIntSDSCR": ("C7", "SDSCR: points > 1 % stronger, interaction term removed", _first),
     # C8: ESCR's interaction factor
@@ -519,7 +510,6 @@ NUMBER_MACROS = {
     "CeightProbeOneSameHour": ("C8", "probe_0.01: weakest hour as under impedance", _of),
     # C9: checks
     "CnineParallel": ("C9", "parallel circuits: same weakest hour as circuit 1", _of),
-    "CnineParallelDln": ("C9", "parallel circuits: max |Δln| against circuit 1"),
     # captions
     "FthreeBeyondSCR": ("captions", "F3: SCR points beyond the window (of all, lowest value)", _first),
     "FthreeBeyondWSCR": ("captions", "F3: WSCR points beyond the window (of all, lowest value)", _first),
