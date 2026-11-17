@@ -718,6 +718,16 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         add(claim, f"{metric}: points > {MATERIAL_PCT:g} % stronger while the network weakens",
             int(((g["r_network"] < 0) & (g["r"] > MATERIAL_PCT / 100)).sum()), "d4_hourly")
         add(claim, f"{metric}: largest change toward stronger", pct(g["r"].max(), 2), "d4_hourly")
+    # which outages give the opposing points, and whether each is a branch at another plant's POI
+    poi = {str(s.host_bus): s.poi_bus for s in SITES}
+    for metric in ("ESCR", "SDSCR"):
+        g = d4h[(d4h["metric"] == metric) & (d4h["r_network"] < 0) & (d4h["r"] > MATERIAL_PCT / 100)]
+        at_other_poi = g.apply(lambda r: any(b in ctx["branch_buses"][r.case]
+                                             for s, b in poi.items() if s != r.site), axis=1)
+        add(c7, f"{metric}: outages with points > {MATERIAL_PCT:g} % stronger while the network weakens",
+            ", ".join(sorted(g["case"].unique())) or "none", "d4_hourly")
+        add(c7, f"{metric}: of these points, from a branch at another plant's POI",
+            f"{int(at_other_poi.sum())}/{len(g)}", "d4_hourly")
     # mechanism, on the observation's own points: > MATERIAL_PCT stronger, under each recomputed form
     for metric in ("SDSCR", "ESCR"):
         part = d4[d4["metric"] == metric]
@@ -819,6 +829,8 @@ def run(input_dir=DEFAULT_INPUT, output_dir=DEFAULT_OUTPUT):
     corridors, representative = scenarios(data["contingencies"])
     cases = [INTACT] + corridors
     ctx = build_context(data, hours)
+    con = data["contingencies"]
+    ctx["branch_buses"] = {r.case: (int(r.from_bus), int(r.to_bus)) for r in con.itertuples()}  # C7
 
     values = variant_values(data["variables"], {m: P_MW[AS_RUN[m]] for m in METRICS})
     out = {"reconstruction_check": check_reconstruction(data["metrics"], values)}
