@@ -75,7 +75,7 @@ import pandas as pd
 from experiments.glover37 import manifest
 from experiments.glover37.config import (
     ANALYSIS_DIR, AS_RUN, EVAL_BUS, INTACT, METRICS, NETWORK, PROBE_VARIANTS, RAW_DIR,
-    ALL_ONLINE, F3_FLOOR_PCT, MATERIAL_PCT, NEAR_MIN_PCT, RECONSTRUCTION_TOL, REFERENCE_VARIANT, REL_TIE, S_BASE_MVA, SEQUENTIAL, SITES,
+    ALL_ONLINE, F3_FLOOR, MATERIAL_PCT, NEAR_MIN_PCT, RECONSTRUCTION_TOL, REFERENCE_VARIANT, REL_TIE, S_BASE_MVA, SEQUENTIAL, SITES,
 )
 
 DEFAULT_INPUT = RAW_DIR
@@ -703,6 +703,8 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
     add(c, "network-only change, most strengthening", pct(d4h["r_network"].max(), 2), "d4_hourly")
     low = d4h.loc[d4h["r_network"].idxmin()]
     add(c, "network-only change, most weakening", pct(low["r_network"], 0), "d4_hourly")
+    add(c, "delta_Z, most strengthening", f"{np.log1p(d4h['r_network'].max()):.3f}", "d4_hourly")
+    add(c, "delta_Z, most weakening", f"{np.log1p(low['r_network']):.2f}", "d4_hourly")
     add(c, "most weakening at", f"{low['case']} / {low['metric']} / site {low['site']} / hour {int(low['hour_index'])}",
         "d4_hourly")
 
@@ -766,12 +768,14 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         ", ".join(str(n) for n in sorted(set(t3["E5_n_committed"]))), "t3_commitment")
     add(c, "F2a: minimum and peak load (load scale, hour)",
         f"{lam.min():.2f} at {int(lam.idxmin())}; {lam.max():.2f} at {int(lam.idxmax())}", "load scale")
-    add(c, "F3: display window", f"down to {F3_FLOOR_PCT:g} %", "config")
+    # F3 is drawn in delta units: Δln m = ln(1 + r) against δ_Z = ln(1 + r_network)
+    add(c, "F3: display window", f"down to {F3_FLOOR:g} (delta units)", "config")
     for metric in METRICS:
         g = d4h[d4h["metric"] == metric]
-        beyond = (100 * g["r_network"] < F3_FLOOR_PCT) | (100 * g["r"] < F3_FLOOR_PCT)
+        dl, dz = np.log1p(g["r"]), np.log1p(g["r_network"])
+        beyond = (dz < F3_FLOOR) | (dl < F3_FLOOR)
         add(c, f"F3: {metric} points beyond the window (of all, lowest value)",
-            f"{int(beyond.sum())}/{len(g)}, {pct(min(g['r'].min(), g['r_network'].min()), 0)}", "d4_hourly")
+            f"{int(beyond.sum())}/{len(g)}, {min(dl.min(), dz.min()):.2f}", "d4_hourly")
     return pd.DataFrame(rows)
 
 

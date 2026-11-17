@@ -31,7 +31,7 @@ import pandas as pd
 
 from experiments.glover37 import layout, manifest
 from experiments.glover37.config import (
-    ALL_ONLINE, ANALYSIS_DIR, AS_RUN, AUDITED_PROBE, F3_FLOOR_PCT, EVAL_BUS, EVAL_POINT, FIGURES_DIR, IF_STEPS,
+    ALL_ONLINE, ANALYSIS_DIR, AS_RUN, AUDITED_PROBE, F3_FLOOR, EVAL_BUS, EVAL_POINT, FIGURES_DIR, IF_STEPS,
     INTACT, MATERIAL_PCT, METRIC_DEFINITIONS, METRICS, NETWORK, RAW_DIR, REFERENCE_VARIANT, RESULTS_ROOT,
     SEQUENTIAL, SITES, VALIDATION_DIR, probe_variant,
 )
@@ -334,8 +334,8 @@ OPPOSITE = (176 / 255, 122 / 255, 104 / 255, 0.08)  # network weaker, metric str
 
 
 def _outage_panel(ax, frame, title, xlim, ylim):
-    """Metric change against the network's own change (both in %), one point per corridor,
-    hour and site; the diagonal is "follows the network"."""
+    """Metric change against the network's own change, one point per corridor, hour and site,
+    in the units of `frame` (r, r_network); the diagonal is "follows the network"."""
     ax.fill_between([xlim[0], 0], 0, ylim[1], color=OPPOSITE, linewidth=0, zorder=0)
     ax.plot([min(xlim[0], ylim[0]), max(xlim[1], ylim[1])], [min(xlim[0], ylim[0]), max(xlim[1], ylim[1])],
             color=FAINT, linewidth=0.7, zorder=1)
@@ -345,7 +345,7 @@ def _outage_panel(ax, frame, title, xlim, ylim):
         part = frame[frame["site"].isin([site, GROUP])] if (frame["site"] == GROUP).any() and site == SITE_IDS[0] \
             else frame[frame["site"] == site]
         color = INK if (part["site"] == GROUP).all() and len(part) else SITE_COLOR[site]
-        ax.scatter(100 * part["r_network"], 100 * part["r"], s=3, color=color, alpha=0.35,
+        ax.scatter(part["r_network"], part["r"], s=3, color=color, alpha=0.35,
                    linewidths=0, rasterized=True, zorder=2)
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
@@ -369,19 +369,20 @@ def _site_key(fig, with_group=False):
 
 
 
-def plot_outage(path=ANALYSIS_DIR / "d4_hourly.csv", floor=F3_FLOOR_PCT):
-    """F3 (D4): each metric's outage change against the network's own change, in a window
-    down to `floor` % (the points beyond it are stated in the text)."""
+def plot_outage(path=ANALYSIS_DIR / "d4_hourly.csv", floor=F3_FLOOR):
+    """F3 (D4): each metric's outage change, Δln m, against its driving-point-impedance part
+    δ_Z of (2), in a window down to `floor` (the points beyond it are counted in the caption)."""
     d = pd.read_csv(path, dtype={"site": str})
-    top = float(np.ceil(100 * d["r"].max() / 2) * 2 + 2)
-    xlim, ylim = (floor, 2.0), (floor, top)
+    d["r"], d["r_network"] = np.log1p(d["r"]), np.log1p(d["r_network"])  # Δln m, δ_Z
+    top = float(np.ceil(d["r"].max() / 0.02) * 0.02 + 0.02)
+    xlim, ylim = (floor, 0.02), (floor, top)
     fig, axes = plt.subplots(1, 4, figsize=(7.14, 2.25), sharex=True, sharey=True)
     for ax, (tag, metric) in zip(axes, zip("abcd", ("SCR", "WSCR", "SDSCR", "ESCR"))):
         part = d[d["metric"] == metric]
-        beyond = (100 * part["r_network"] < floor) | (100 * part["r"] < floor)
+        beyond = (part["r_network"] < floor) | (part["r"] < floor)
         _outage_panel(ax, part[~beyond], f"{tag}) {metric}", xlim, ylim)
-        ax.set_xlabel("network change [%]", fontsize=7, color=FAINT)
-    axes[0].set_ylabel("metric change [%]", fontsize=7, color=FAINT)
+        ax.set_xlabel(r"$\delta_Z$", fontsize=7.5, color=FAINT)
+    axes[0].set_ylabel(r"$\Delta\ln m$", fontsize=7.5, color=FAINT)
     _site_key(fig, with_group=True)
     return fig
 
@@ -397,6 +398,7 @@ def plot_interaction_factor(path=ANALYSIS_DIR / "miif_hourly.csv", probe=AUDITED
     d = pd.read_csv(path, dtype={"site": str})
     lines = {REFERENCE_VARIANT: (INK, "impedance"),
              probe: (PROBE_INK, f"voltage step {100 * IF_STEP_OF[probe]:g} %")}
+    # in % (relative change r): F4 compares the size of ESCR's change, not its parts as F3 does
     r = {v: np.sort(100 * d.loc[d["variant"] == v, "r"].to_numpy()) for v in lines}
     lo = float(np.floor(min(x.min() for x in r.values()) / 5) * 5)
     hi = float(np.ceil(max(x.max() for x in r.values()) / 5) * 5)
@@ -485,6 +487,8 @@ NUMBER_MACROS = {
     # C5: the network under an outage
     "CfiveNetMax": ("C5", "network-only change, most strengthening"),
     "CfiveNetMin": ("C5", "network-only change, most weakening"),
+    "CfiveDeltaMax": ("C5", "delta_Z, most strengthening"),
+    "CfiveDeltaMin": ("C5", "delta_Z, most weakening"),
     # C7: ESCR and SDSCR
     "CsevenOppESCR": ("C7", "ESCR: points > 1 % stronger while the network weakens"),
     "CsevenOppSDSCR": ("C7", "SDSCR: points > 1 % stronger while the network weakens"),

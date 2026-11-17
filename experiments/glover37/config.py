@@ -198,7 +198,7 @@ INTACT = "intact"
 
 REL_TIE = 1e-9
 # Text and caption numbers (analyze writes them, report formats them)
-F3_FLOOR_PCT = -20.0      # F3 display window: weakenings beyond it are not drawn, only counted
+F3_FLOOR = -0.2           # F3 display window in delta units (Δln m, δ_Z): weakenings beyond it are not drawn, only counted
 NEAR_MIN_PCT = 1.0        # "within x % of the weekly minimum" (E5 flatness, C2)
 MATERIAL_PCT = 1.0        # "> x % stronger" (C6-C8)
 RECONSTRUCTION_TOL = 1e-9
