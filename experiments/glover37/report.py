@@ -492,8 +492,6 @@ NUMBER_MACROS = {
     "CsevenShareSDSCR": ("C7", "SDSCR: share of points > 1 % stronger"),
     "CsevenMaxESCR": ("C7", "ESCR: largest change toward stronger"),
     "CsevenMaxSDSCR": ("C7", "SDSCR: largest change toward stronger"),
-    "CsevenNoIntESCR": ("C7", "ESCR: points > 1 % stronger, interaction term removed", _first),
-    "CsevenNoIntSDSCR": ("C7", "SDSCR: points > 1 % stronger, interaction term removed", _first),
     # C8: ESCR's interaction factor
     "CeightImpShare": ("C8", "impedance: share of points > 1 % stronger"),
     "CeightImpMax": ("C8", "impedance: largest change toward stronger"),
@@ -502,8 +500,6 @@ NUMBER_MACROS = {
     "CeightProbeTwoShare": ("C8", "probe_0.02: share of points > 1 % stronger"),
     "CeightProbeOneMax": ("C8", "probe_0.01: largest change toward stronger"),
     "CeightProbeOneSameHour": ("C8", "probe_0.01: weakest hour as under impedance", _of),
-    # C9: checks
-    "CnineParallel": ("C9", "parallel circuits: same weakest hour as circuit 1", _of),
     # captions
     "FthreeBeyondSCR": ("captions", "F3: SCR points beyond the window (of all, lowest value)", _first),
     "FthreeBeyondWSCR": ("captions", "F3: WSCR points beyond the window (of all, lowest value)", _first),
