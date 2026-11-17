@@ -652,6 +652,18 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
         f"{k} {v}" for k, v in exc["explanation"].value_counts().items()) or "none"), "d1_weakest_hour")
     add(c, "exceptions in the intact case", int((exc["case"] == INTACT).sum()), "d1_weakest_hour")
     add(c, "metrics with exceptions", ", ".join(sorted(exc["metric"].unique())) or "none", "d1_weakest_hour")
+    # where the exceptions fall, and how far below the minimum over the minimum-commitment hours
+    if len(exc):
+        t_exc = [int(str(t).split(";")[0]) for t in exc["t_star"]]
+        units = [int(ctx["n_committed"][r.network].loc[t]) for r, t in zip(exc.itertuples(), t_exc)]
+        gaps = [series(values, "m", r.metric, r.site, r.case).min()
+                / series(values, "m", r.metric, r.site, r.case).loc[sorted(ctx["b_count"][r.network])].min() - 1
+                for r in exc.itertuples()]
+        add(c, "exceptions: weakest hours", f"{min(t_exc)} to {max(t_exc)}", "d1_weakest_hour")
+        add(c, "exceptions: committed units at their weakest hour", f"{min(units)} to {max(units)}",
+            "d1_weakest_hour")
+        add(c, "exceptions: largest gap below the minimum-commitment hours", pct(max(abs(g) for g in gaps), 2),
+            "metric values")
     r1 = [week(values, m, s).max() / week(values, m, s).min() - 1 for m, s in UNITS]
     add(c, "week range per metric-site (max / min - 1)", f"{pct(min(r1))} to {pct(max(r1))}", "metric values")
 

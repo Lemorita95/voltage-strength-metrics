@@ -84,12 +84,18 @@ def _runs(hours):
     return runs
 
 
-def _week_axis(ax, hours, stamps, labels=True):
-    """Day gridlines and labels, recessive frame, as in the explorer."""
-    days = [h for h in hours if stamps.loc[h].hour == 0]
+def _week_axis(ax, hours, stamps, labels=True, hour_ticks=False):
+    """Day gridlines and labels, recessive frame, as in the explorer. hour_ticks: ticks every
+    24 h labelled with the hour index (the text's hour numbers) instead of the dates."""
     ax.set_xlim(hours[0] - 3, hours[-1] + 3)
-    ax.set_xticks(days)
-    ax.set_xticklabels([stamps.loc[h].strftime("%a %d") for h in days] if labels else [])
+    if hour_ticks:
+        ticks = list(range(int(hours[0]), int(hours[-1]) + 2, 24))
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([str(t) for t in ticks] if labels else [])
+    else:
+        days = [h for h in hours if stamps.loc[h].hour == 0]
+        ax.set_xticks(days)
+        ax.set_xticklabels([stamps.loc[h].strftime("%a %d") for h in days] if labels else [])
     ax.grid(axis="x", color=GRID_F2, linewidth=0.7)
     ax.tick_params(axis="x", length=0, labelsize=7, colors=FAINT, pad=3)
     for side in ("top", "right", "left"):
@@ -183,7 +189,7 @@ def plot_week(raw_dir=RAW_DIR, width_in=COLUMN_IN):
     ax_l.grid(axis="y", color=GRID_F2, linewidth=0.6)
     ax_l.tick_params(axis="y", length=0, labelsize=6.5, colors=FAINT)
     ax_l.set_ylabel("load scale", fontsize=6.5, color=FAINT)
-    _week_axis(ax_l, hours, stamps, labels=False)
+    _week_axis(ax_l, hours, stamps, labels=False, hour_ticks=True)
 
     for y, metric in enumerate(F2_METRICS):
         for first, last in _runs(min_hours[NETWORK[metric]]):
@@ -202,8 +208,9 @@ def plot_week(raw_dir=RAW_DIR, width_in=COLUMN_IN):
     ax_m.tick_params(axis="y", length=0, pad=3)
     for y in range(len(F2_METRICS) - 1):  # hairlines between metric rows, not through the markers
         ax_m.axhline(y + 0.5, color=RULE, linewidth=0.6, zorder=0)
-    _week_axis(ax_m, hours, stamps)
+    _week_axis(ax_m, hours, stamps, hour_ticks=True)
     ax_m.tick_params(axis="x", labelsize=6.5)
+    ax_m.set_xlabel("hour", fontsize=6.5, color=FAINT, labelpad=2)
     for ax, tag in ((ax_l, "a)"), (ax_m, "b)")):
         ax.annotate(tag, (0, 1), xycoords="axes fraction", xytext=(-24, 2), textcoords="offset points",
                     fontsize=7.5, fontweight="bold", color=INK, va="bottom")
@@ -214,7 +221,7 @@ def plot_week(raw_dir=RAW_DIR, width_in=COLUMN_IN):
                 plt.Line2D([], [], marker="o", linestyle="", markersize=3.5, markerfacecolor="white",
                            markeredgecolor=FAINT, label="all online"),
                 plt.Rectangle((0, 0), 1, 1, color=BAND, label="fewest units")]
-    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.07), ncol=4, frameon=False,
+    fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.13), ncol=4, frameon=False,
                fontsize=6, labelcolor=INK, handletextpad=0.2, columnspacing=0.8)
     return fig
 
@@ -460,6 +467,10 @@ NUMBER_MACROS = {
     "ConeAll": ("C1", "same, all cases (intact and outages)", _of),
     "ConeZonly": ("C1", "confirmation: Z_ii-only weakest hour in those hours", _of),
     "ConeExceptions": ("C1", "exceptions and their explanation", _first),
+    "ConeExceptionHourFirst": ("C1", "exceptions: weakest hours", _range(0)),
+    "ConeExceptionHourLast": ("C1", "exceptions: weakest hours", _range(1)),
+    "ConeExceptionUnits": ("C1", "exceptions: committed units at their weakest hour", _range(0)),
+    "ConeExceptionGap": ("C1", "exceptions: largest gap below the minimum-commitment hours"),
     "ConeRangeLow": ("C1", "week range per metric-site (max / min - 1)", _range(0)),
     "ConeRangeHigh": ("C1", "week range per metric-site (max / min - 1)", _range(1)),
     # C2: every unit online
