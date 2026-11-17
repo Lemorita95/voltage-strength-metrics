@@ -377,7 +377,7 @@ def plot_outage(path=ANALYSIS_DIR / "d4_hourly.csv", floor=F3_FLOOR):
     top = float(np.ceil(d["r"].max() / 0.02) * 0.02 + 0.02)
     xlim, ylim = (floor, 0.02), (floor, top)
     fig, axes = plt.subplots(1, 4, figsize=(7.14, 2.25), sharex=True, sharey=True)
-    for ax, (tag, metric) in zip(axes, zip("abcd", ("SCR", "WSCR", "SDSCR", "ESCR"))):
+    for ax, (tag, metric) in zip(axes, zip("abcd", ("SCR", "WSCR", "ESCR", "SDSCR"))):
         part = d[d["metric"] == metric]
         beyond = (part["r_network"] < floor) | (part["r"] < floor)
         _outage_panel(ax, part[~beyond], f"{tag}) {metric}", xlim, ylim)
@@ -497,13 +497,10 @@ NUMBER_MACROS = {
     "CsevenMaxESCR": ("C7", "ESCR: largest change toward stronger"),
     "CsevenMaxSDSCR": ("C7", "SDSCR: largest change toward stronger"),
     # C8: ESCR's interaction factor
-    "CeightImpShare": ("C8", "impedance: share of points > 1 % stronger"),
-    "CeightImpMax": ("C8", "impedance: largest change toward stronger"),
     "CeightProbeHalfShare": ("C8", "probe_0.005: share of points > 1 % stronger"),
     "CeightProbeOneShare": ("C8", "probe_0.01: share of points > 1 % stronger"),
     "CeightProbeTwoShare": ("C8", "probe_0.02: share of points > 1 % stronger"),
     "CeightProbeOneMax": ("C8", "probe_0.01: largest change toward stronger"),
-    "CeightProbeOneSameHour": ("C8", "probe_0.01: weakest hour as under impedance", _of),
     # captions
     "FthreeBeyondSCR": ("captions", "F3: SCR points beyond the window (of all, lowest value)", _first),
     "FthreeBeyondWSCR": ("captions", "F3: WSCR points beyond the window (of all, lowest value)", _first),
