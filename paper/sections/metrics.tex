@@ -1,0 +1,94 @@
+\section{Metrics and Conventions}
+\label{sec:metrics}
+
+\subsection{Fault quantities}
+
+All four metrics are built from the short-circuit power and the impedance matrix at the evaluation
+bus. For bus $i$ in a given network and operating state, the short-circuit power $\mathrm{SCMVA}_i$ (MVA) is
+obtained from a bolted three-phase fault solved from the actual pre-fault power flow, with
+$\mathrm{SCMVA}_i = S_\mathrm{b}|I_{\mathrm{f},i}|$ at $V_\mathrm{n} = 1$~pu and $S_\mathrm{b} = 100$~MVA. The
+impedance matrix $\mathbf{Z} = \mathbf{Y}^{-1}$ comes from the same fault model: the passive
+network, the source admittances of the committed synchronous generators, and constant-impedance
+equivalents of the loads at their pre-fault voltages. Assuming constant-impedance loads and constant-current
+converters during the fault, the fault network is linear, and
+$\mathrm{SCMVA}_i \approx S_\mathrm{b}|V_i|/|Z_{ii}|$: the short-circuit power carries both the driving-point
+impedance $Z_{ii}$ and the pre-fault voltage magnitude $|V_i|$. Every denominator uses the IBR plants' rated active
+power $P_i$.
+
+\subsection{Metrics}
+
+Table~\ref{tab:conventions} lists the four metrics, each with the network, evaluation point and
+interaction term its source specifies; Section~\ref{sec:study} gives the plant model and where each
+point lies in it. SCR and WSCR are evaluated at the point of interconnection (POI), on the
+transmission network without the IBR plants \cite{ieee2800}; WSCR combines the three sites into one
+group value \cite{ieee2800,zhang2014}. ESCR is evaluated at each plant's medium-voltage (MV) bus,
+the high-voltage side of its padmount transformer, on the network with the IBR plants
+\cite{fingrid2023}. It is the multi-infeed ESCR of
+\cite{cigre364} with no reactive compensation, the quantity titled SCRIF in \cite{ieee2800} and
+equivalent SCR in \cite{cigre671,fingrid2023}; it is not the effective SCR of line-commutated HVDC,
+which subtracts filter reactive power. SDSCR is evaluated at the converter terminal, on the low-voltage
+side of the padmount transformer, as in \cite{wu2018}. Its weights $w_{ij}$ are complex, with the conjugated
+voltage ratio as in \cite{wu2018,maharjan2023}, and
+the magnitude is taken of the whole weighted sum.
+
+\begin{table}[!t]
+\caption{Metric definitions and conventions}
+\label{tab:conventions}
+\centering
+\footnotesize
+\input{../figures/glover37/t1_conventions}
+\end{table}
+
+\subsection{Interaction factor}
+
+ESCR and SDSCR add an interaction term to the plant's own power: $\sum_{j\ne i}
+\mathrm{MIIF}_{ji}P_j$ and $\sum_{j\ne i} w_{ij}P_j$, respectively. SCR and WSCR have none. The
+multi-infeed interaction factor $\mathrm{MIIF}_{ji}$ is the ratio of the voltage changes
+$\Delta V_j/\Delta V_i$ for a small voltage step at bus $i$ \cite{cigre364}. The step is about
+1\,\%, small enough that no voltage-controlling device acts, and the ratio then equals the
+impedance-matrix form $|Z_{ji}/Z_{ii}|$ \cite{cigre364}. This impedance form is the reference used
+here. Other sources obtain the factor differently: IEEE Std 2800-2022 \cite{ieee2800} allows impedance-matrix
+manipulation or reactive-power injection, and Fingrid \cite{fingrid2023} applies a voltage step in a power
+flow, in which voltage-regulating generators respond. Section~\ref{sec:study} describes the
+voltage-step variant used to test this choice.
+
+\subsection{Attribution of changes}
+
+All four metrics share one structure. With the approximation of Section~\ref{sec:metrics}-A,
+SCR, ESCR and SDSCR can be written as
+\begin{equation}
+m \approx \frac{S_\mathrm{b}\,|V_i|^{a}}{|Z_{ii}|\,D_i} ,
+\label{eq:shape}
+\end{equation}
+exactly for SDSCR, with the exponent $a$ and the denominator $D_i$ in Table~\ref{tab:shape}.
+\begin{table}[!t]
+\caption{Exponent and denominator of each metric in \eqref{eq:shape}}
+\label{tab:shape}
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lcl@{}}
+\toprule
+Metric & $a$ & $D_i$ \\
+\midrule
+SCR & 1 & $P_i$ \\
+ESCR & 1 & $P_i + \sum_{j\ne i}\mathrm{MIIF}_{ji}P_j$ \\
+SDSCR & 2 & $|P_i + \sum_{j\ne i} w_{ij}P_j|$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+WSCR is a weighted sum of the three sites' SCRs, with fixed weights $(P_i/\sum_k P_k)^2$. With $P_i$ the rated power in every state, the
+change of a metric between two states (two hours, or an outage and the intact case) splits into
+three parts:
+\begin{equation}
+\Delta\ln m = \underbrace{a\,\Delta\ln|V_i|}_{\delta_V}
+\;\underbrace{-\,\Delta\ln D_i}_{\delta_I}
+\;\underbrace{-\,\Delta\ln|Z_{ii}|}_{\delta_Z} ,
+\label{eq:split}
+\end{equation}
+the pre-fault-voltage, interaction and driving-point-impedance parts,
+$\delta_V = a\,\Delta\ln|V_i|$, $\delta_I = -\Delta\ln D_i$ and $\delta_Z = -\Delta\ln|Z_{ii}|$,
+each positive when it raises the metric. The interaction part is zero
+for SCR and WSCR. Since~\eqref{eq:shape} is approximate, the parts are computed exactly by recomputing the metric
+with unit pre-fault voltage and without the interaction factor. A site is called weaker when its
+metric falls, and the network weaker when $|Z_{ii}|$ rises ($\delta_Z < 0$).

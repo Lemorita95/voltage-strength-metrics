@@ -1,0 +1,43 @@
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+Under the largest-first rule the four metrics agree on when each site is weakest: all reach
+their minimum in the minimum-commitment hours, and no metric tells more than the committed set
+of synchronous generators. With every unit online they disagree, although each then varies by
+only a few percent over the week. The two rules, however,
+place the weakest hour at opposite ends of the load range. The critical hour is thus a property
+of the commitment, not of the metric, and a screen over time needs a model of commitment or
+measured operating states. A minimum-load snapshot finds the weekly minimum where, as under
+the largest-first rule here, the fewest units are online at minimum load.
+
+Under outages, commitment still sets the weakest hour in nearly every case, and the outage
+changes how weak the site is rather than when. The metrics differ in how they report that
+change. SCR and WSCR follow the change in the network.
+ESCR and SDSCR add the other plants' contribution, weighted by their electrical proximity to the site,
+and an outage that moves another plant away lowers that weight. All the points in which they
+oppose the network come from two outages, each of a line at another plant's POI, and the
+interaction term alone explains them. A screen based on ESCR or SDSCR would therefore not flag
+these outages, while one based on SCR would. Whether the site is in fact weaker or stronger 
+cannot be decided from fault quantities, since both readings follow from the same impedances. 
+It depends on whether the site's stability is limited more by the network's fault current or 
+by the interaction between nearby plants, which only an EMT study can show.
+
+The opposition found above does not come from a convention but from the interaction term in the
+metrics' definitions. How the interaction factor is obtained, however, changes how often ESCR
+opposes the network and by how much. Since the literature obtains it in different ways \cite{cigre364,ieee2800,fingrid2023}, an ESCR value should state how its
+interaction factor is obtained.
+
+The findings rest on the following modelling choices. The fault model assumes constant-impedance loads and
+constant-current converters, which makes the fault network linear and \eqref{eq:shape} close to
+exact. Converters that inject reactive current during the fault would make it nonlinear and add
+their own contribution to the short-circuit power. The constant-impedance loads are also the only
+path by which $|Z_{ii}|$ changes with load when every unit is online, so that result depends on
+the load model. The voltage-step factor uses ideal voltage-controlled generators, so it remains
+untested whether its smaller interaction comes from the network or from the ideal control, and
+its dependence on the step size is not explained. The study covers one network and one week,
+with the IBR plants at rated output and unity power factor, switched shunts fixed, commitment
+held during outages and single branch outages only. Pre-fault voltages were not corrected to an
+operating band. Since every plant runs at rated output, denominators based on rated, actual or
+apparent power differ only by one constant factor per site and change no conclusion. The 1\,\%
+threshold for a material change is a choice. The metric equations follow their sources, but the
+computed values could not be checked against a published case.

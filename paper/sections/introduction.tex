@@ -1,0 +1,54 @@
+\section{Introduction}
+\label{sec:introduction}
+
+As inverter-based resources (IBRs) displace synchronous generation, the strength of the grid at
+their connection points becomes a planning concern \cite{SvK2025, fingrid2023, Denholm2022, NERC2018}. Fault-current-based metrics are the
+usual first screen: they are quick to compute from a network model, and their values decide
+which connections and operating conditions receive detailed electromagnetic-transient study
+\cite{ieee2800,nerc2017,cigre671}. IEEE Std 2800-2022 adds that a value used across a system
+should cover a variety of operating conditions and topologies \cite{ieee2800}. Screening is
+therefore only as reliable as the metric's ability to identify when, and under which outages, a
+site is weakest.
+
+Several such metrics are in use, and each comes with its own conventions. The short-circuit ratio
+(SCR) and the weighted SCR (WSCR) are evaluated at the point of interconnection on the network
+without the IBR plants \cite{ieee2800,zhang2014}. The equivalent SCR (ESCR), titled SCRIF in IEEE
+Std 2800-2022 \cite{ieee2800,cigre671}, adds the plants' interaction through multi-infeed interaction
+factors \cite{cigre364}, and is applied on the medium-voltage side \cite{fingrid2023}. The
+site-dependent SCR (SDSCR) weights the other plants through the impedance matrix at the converter
+terminals \cite{wu2018}. Names and the construction of the interaction factor differ between
+sources \cite{joswigjones2026,goonasekara2023,darii2026}. Comparisons of the metrics so far rest
+on discrete cases: Wu et al. \cite{wu2018} compare them over twelve operating and
+contingency conditions, others use a handful of loading cases or single snapshots
+\cite{sanni2022,dhungana2026,khamees2026,rosengren2025}, and commitment has been shown to drive
+WSCR within a single period \cite{kim2025}. WSCR, however, is a group metric and does not give the strength of individual sites.
+To the authors' knowledge, no study has followed the
+metrics through a time-ordered sequence of operating states, in which commitment changes with
+load, together with a full set of line and transformer outages.
+
+This paper asks whether SCR, WSCR, ESCR and SDSCR, each applied as specified, lead to consistent
+screening conclusions along such a sequence, and what explains any difference. Over time, it asks
+whether the metrics agree on when each site is weakest, whether any metric tells more than the
+committed set of synchronous generators, and whether the usual planning snapshots find the weekly
+minimum. Under outages, it asks what a single branch outage does to each site. Finally, it asks whether
+differences come from the metrics themselves or from their conventions (network model, evaluation
+point and interaction-factor construction).
+
+The study adds three IBR plants to the 37-bus network of \cite{gloverPSAD} and evaluates the four metrics over
+a 168-hour week, with load scaled by a public demand profile, under a largest-first commitment rule,
+intact and for each single line and transformer outage, and with every unit online on the intact
+network. The contributions are:
+\begin{itemize}
+  \item a time-ordered, per-site comparison of the four metrics over a week and the full N-1 branch
+        set, each under its practitioner-specified network, evaluation point and denominator;
+  \item an attribution of every agreement and disagreement to a term of the metric, confirmed by
+        removing that term or holding it constant;
+  \item a reconciliation of the metrics' conventions, including how the choice of interaction
+        factor changes ESCR's response to outages;
+  \item a reproducible implementation on public data and open code.
+\end{itemize}
+
+Section~\ref{sec:metrics} defines the metrics and their conventions, and Section~\ref{sec:study}
+the benchmark, operating states and experiments. Section~\ref{sec:results} presents the results,
+Section~\ref{sec:discussion} discusses their implications and limitations, and
+Section~\ref{sec:conclusion} concludes.

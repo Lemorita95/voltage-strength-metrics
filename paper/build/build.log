@@ -1,0 +1,315 @@
+Rc files read (in order):
+  NONE
+Latexmk: This is Latexmk, John Collins, 9 March 2026. Version 4.88.
+Latexmk: applying rule 'bibtex build/main'...
+Rule 'bibtex build/main':  Reasons for rerun
+Changed files or newly in use/created:
+  ./refs.bib
+Category 'changed_user':
+  ./refs.bib
+
+------------
+Run number 1 of rule 'bibtex build/main'
+------------
+====== ENV{BIBINPUTS} changed to '/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:build:/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper/build:'
+Latexmk: Change directory to 'build/'.
+To assist finding of files in document directory, I set
+  BIBINPUTS='/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:build:/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper/build:'
+  BSTINPUTS='/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:'.
+------------
+Running 'bibtex  "main.aux"'
+------------
+This is BibTeX, Version 0.99e (TeX Live 2026)
+The top-level auxiliary file: main.aux
+The style file: IEEEtran.bst
+Database file #1: refs.bib
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+Latexmk: Change directory back to '/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper'
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  build/main.bbl
+
+------------
+Run number 1 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -recorder -output-directory="build"  "main.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./main.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(./IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/cite/cite.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/textcomp.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/array.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def)
+(build/main.aux)
+-- Lines per column: 56 (exact).
+(/usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+(./sections/abstract.tex) (./sections/introduction.tex
+
+LaTeX Warning: Citation `ieee2800' on page 1 undefined on input line 8.
+
+
+LaTeX Warning: Citation `nerc2017' on page 1 undefined on input line 8.
+
+
+LaTeX Warning: Citation `cigre671' on page 1 undefined on input line 8.
+
+
+LaTeX Warning: Citation `ieee2800' on page 1 undefined on input line 9.
+
+
+LaTeX Warning: Citation `ieee2800' on page 1 undefined on input line 15.
+
+
+LaTeX Warning: Citation `zhang2014' on page 1 undefined on input line 15.
+
+
+LaTeX Warning: Citation `ieee2800' on page 1 undefined on input line 16.
+
+
+LaTeX Warning: Citation `cigre671' on page 1 undefined on input line 16.
+
+
+LaTeX Warning: Citation `cigre364' on page 1 undefined on input line 17.
+
+
+LaTeX Warning: Citation `fingrid2023' on page 1 undefined on input line 17.
+
+
+LaTeX Warning: Citation `wu2018' on page 1 undefined on input line 19.
+
+
+LaTeX Warning: Citation `joswigjones2026' on page 1 undefined on input line 20.
+
+
+
+LaTeX Warning: Citation `goonasekara2023' on page 1 undefined on input line 20.
+
+
+
+LaTeX Warning: Citation `darii2026' on page 1 undefined on input line 20.
+
+
+LaTeX Warning: Citation `wu2018' on page 1 undefined on input line 21.
+
+
+LaTeX Warning: Citation `sanni2022' on page 1 undefined on input line 23.
+
+
+LaTeX Warning: Citation `dhungana2026' on page 1 undefined on input line 23.
+
+
+LaTeX Warning: Citation `khamees2026' on page 1 undefined on input line 23.
+
+
+LaTeX Warning: Citation `rosengren2025' on page 1 undefined on input line 23.
+
+
+LaTeX Warning: Citation `kim2025' on page 1 undefined on input line 24.
+
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd) [1{/usr/local/t
+exlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/20
+26/texmf-dist/fonts/enc/dvips/base/8r.enc}]) (./sections/metrics.tex)
+(./sections/study.tex) (./sections/results.tex) (./sections/discussion.tex)
+(./sections/conclusion.tex) (build/main.bbl
+Underfull \hbox (badness 1371) in paragraph at lines 25--28
+[]\OT1/ptm/m/n/8 IEEE, ``IEEE stan-dard for in-ter-con-nec-tion and in-ter-op-e
+r-abil-ity of
+)
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[2] (build/main.aux)
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ )
+(see the transcript file for additional information)</usr/local/texlive/2026/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026/texm
+f-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026/texmf-dist/fon
+ts/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/
+urw/times/utmr8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/urw/times/
+utmri8a.pfb>
+Output written on build/main.pdf (2 pages, 72246 bytes).
+Transcript written on build/main.log.
+Latexmk: Getting log file 'build/main.log'
+Latexmk: Examining 'build/main.fls'
+Latexmk: Examining 'build/main.log'
+Latexmk: Found input bbl file 'build/main.bbl'
+Latexmk: References changed.
+Latexmk: Log file says output to 'build/main.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'build/main.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./refs.bib
+Latexmk: applying rule 'bibtex build/main'...
+Rule 'bibtex build/main':  Reasons for rerun
+Changed files or newly in use/created:
+  build/main.aux
+
+------------
+Run number 2 of rule 'bibtex build/main'
+------------
+====== ENV{BIBINPUTS} changed to '/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:build:/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper/build:'
+Latexmk: Change directory to 'build/'.
+To assist finding of files in document directory, I set
+  BIBINPUTS='/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:build:/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper/build:'
+  BSTINPUTS='/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper:'.
+------------
+Running 'bibtex  "main.aux"'
+------------
+This is BibTeX, Version 0.99e (TeX Live 2026)
+The top-level auxiliary file: main.aux
+The style file: IEEEtran.bst
+Database file #1: refs.bib
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+Latexmk: Change directory back to '/Users/leandronmorita/dev/projects/voltage-strength-metrics/paper'
+Latexmk: applying rule 'pdflatex'...
+Rule 'pdflatex':  Reasons for rerun
+Changed files or newly in use/created:
+  build/main.aux
+
+------------
+Run number 2 of rule 'pdflatex'
+------------
+------------
+Running 'pdflatex  -interaction=nonstopmode -recorder -output-directory="build"  "main.tex"'
+------------
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./main.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+(./IEEEtran.cls
+Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
+-- See the "IEEEtran_HOWTO" manual for usage information.
+-- http://www.michaelshell.org/tex/ieeetran/
+(/usr/local/texlive/2026/texmf-dist/tex/latex/psnfss/ot1ptm.fd)
+-- Using 8.5in x 11in (letter) paper.
+-- Using PDF output.
+-- This is a 10 point document.
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/cite/cite.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amstext.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphicx.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/keyval.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/graphics.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/trig.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/graphics.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-def/pdftex.def)))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/base/textcomp.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/graphics/mathcolor.ltx))
+(/usr/local/texlive/2026/texmf-dist/tex/latex/booktabs/booktabs.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/tools/array.sty)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def)
+(build/main.aux)
+-- Lines per column: 56 (exact).
+(/usr/local/texlive/2026/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+) (/usr/local/texlive/2026/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+(/usr/local/texlive/2026/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg))
+(./sections/abstract.tex) (./sections/introduction.tex
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/local/texlive/2026/texmf-dist/tex/latex/amsfonts/umsb.fd) [1{/usr/local/t
+exlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/local/texlive/20
+26/texmf-dist/fonts/enc/dvips/base/8r.enc}]) (./sections/metrics.tex)
+(./sections/study.tex) (./sections/results.tex) (./sections/discussion.tex)
+(./sections/conclusion.tex) (build/main.bbl
+Underfull \hbox (badness 1371) in paragraph at lines 25--28
+[]\OT1/ptm/m/n/8 IEEE, ``IEEE stan-dard for in-ter-con-nec-tion and in-ter-op-e
+r-abil-ity of
+)
+
+** Conference Paper **
+Before submitting the final camera ready copy, remember to:
+
+ 1. Manually equalize the lengths of two columns on the last page
+ of your paper;
+
+ 2. Ensure that any PostScript and/or PDF output post-processing
+ uses only Type 1 fonts and that every step in the generation
+ process uses the appropriate paper size.
+
+[2] (build/main.aux) )
+(see the transcript file for additional information)</usr/local/texlive/2026/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/2026/texm
+f-dist/fonts/type1/urw/times/utmb8a.pfb></usr/local/texlive/2026/texmf-dist/fon
+ts/type1/urw/times/utmbi8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/
+urw/times/utmr8a.pfb></usr/local/texlive/2026/texmf-dist/fonts/type1/urw/times/
+utmri8a.pfb>
+Output written on build/main.pdf (2 pages, 71930 bytes).
+Transcript written on build/main.log.
+Latexmk: Getting log file 'build/main.log'
+Latexmk: Examining 'build/main.fls'
+Latexmk: Examining 'build/main.log'
+Latexmk: Found input bbl file 'build/main.bbl'
+Latexmk: Log file says output to 'build/main.pdf'
+Latexmk: Using bibtex to make bibliography file(s).
+  ===Source file 'build/main.bbl' for 'pdflatex'
+Latexmk: Found bibliography file(s):
+  ./refs.bib
+Latexmk: All targets (build/main.pdf) are up-to-date
+

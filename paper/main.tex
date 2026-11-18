@@ -1,0 +1,49 @@
+\documentclass[conference]{IEEEtran}
+% IEEEtran.cls: the copy supplied with the IEEE conference template (6/27/2024).
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+
+\graphicspath{{../figures/glover37/}}
+
+% Every run-of-record number in the text is a macro generated from
+% results/glover37/analysis/summary.csv (written by the report stage).
+\input{../figures/glover37/numbers}
+
+\begin{document}
+
+\title{Evaluating Fault-Current System Strength Metrics under Time-Varying Operation and N-1 Contingencies}
+
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Leandro Morita}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering, Division of Electricity} \\
+\textit{Uppsala University}\\
+Uppsala, Sweden \\
+leandro.morita@angstrom.uu.se}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Robert Eriksson}
+\IEEEauthorblockA{\textit{Department of Electrical Engineering, Division of Electricity} \\
+\textit{Uppsala University}\\
+Uppsala, Sweden \\
+robert.eriksson@angstrom.uu.se}
+}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/metrics}
+\input{sections/study}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

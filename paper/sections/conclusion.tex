@@ -1,0 +1,21 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+SCR, WSCR, ESCR and SDSCR were followed through a week of operating states on a 37-bus benchmark
+with three IBR plants, intact and under every single line and transformer outage, and each
+change was split into its voltage, interaction and driving-point-impedance parts. Wherever
+commitment varies, the four metrics agree on when each site is weakest, and commitment sets that
+hour. With commitment fixed they disagree on the hour, although each varies little over the
+week. No metric tells more than the committed set of generators, and the
+minimum-load snapshot finds the weekly minimum when the fewest units run at minimum load, as under the
+largest-first rule.
+Under outages, SCR and WSCR follow the change in the network, while ESCR and SDSCR occasionally
+report a site stronger while the network weakens. This follows from their interaction term, not
+from a convention, although how often it appears in ESCR depends on the construction of the
+interaction factor.
+
+Screening over time therefore needs a model of commitment or measured operating states, and an
+ESCR value should state how its interaction factor is obtained. Future work should test in EMT
+simulation whether the opposing outages are less critical, as ESCR and SDSCR indicate, include converters that inject
+reactive current during faults, and extend the study to other networks, IBR penetrations and
+plant locations, and a broader set of operating states.
