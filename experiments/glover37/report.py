@@ -484,6 +484,9 @@ NUMBER_MACROS = {
     "CthreeGapEfiveMin": ("C3", "largest gap, E5 minimum load"),
     # C4: agreement between metrics
     "CfourSpanEfive": ("C4", "E5 weakest hours span"),
+    "CfourWindowMedian": ("C4", "E5 rise above the weekly minimum within the span, median"),
+    "CfourWindowMax": ("C4", "E5 rise above the weekly minimum within the span, largest", _first),
+    "CfourWindowMaxMetric": ("C4", "E5 rise above the weekly minimum within the span, largest", _after_comma),
     # C5: the network under an outage
     "CfiveNetMax": ("C5", "network-only change, most strengthening"),
     "CfiveNetMin": ("C5", "network-only change, most weakening"),

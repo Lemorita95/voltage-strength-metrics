@@ -698,6 +698,14 @@ def claim_rows(out, ctx, ctx_e5, values, e5_values):
     add(c, "E1 weakest hours", ", ".join(sorted(set(t3["E1_t_star"].astype(str)))), "t3_commitment")
     add(c, "E5 weakest hours", ", ".join(sorted(set(t3["E5_t_star"].astype(str)))), "t3_commitment")
     add(c, "E5 weakest hours span", f"{int(t3['E5_t_star'].max() - t3['E5_t_star'].min())} h", "t3_commitment")
+    # how far each metric-site rises above its weekly minimum within that span (max / min - 1)
+    lo, hi = int(t3["E5_t_star"].min()), int(t3["E5_t_star"].max())
+    rise = {(m, s): week(e5_values, m, s).loc[lo:hi].max() / week(e5_values, m, s).min() - 1 for m, s in UNITS}
+    worst = max(rise, key=rise.get)
+    add(c, "E5 rise above the weekly minimum within the span, median", pct(np.median(list(rise.values()))),
+        "metric values")
+    add(c, "E5 rise above the weekly minimum within the span, largest", f"{pct(rise[worst])}, {worst[0]}",
+        "metric values")
 
     c = "C5 / D4(a): what an outage does to the network"
     add(c, "network-only change, most strengthening", pct(d4h["r_network"].max(), 2), "d4_hourly")

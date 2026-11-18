@@ -152,7 +152,7 @@ METRIC_DEFINITIONS = {
     "ESCR": {"formula": r"$\dfrac{\mathrm{SCMVA}_i}{P_i + \sum_{j \ne i} \mathrm{MIIF}_{ji} P_j}$",
              "interaction": r"$\mathrm{MIIF}_{ji} = |Z_{ji}/Z_{ii}|$",
              "source": "CIGRE TB 364, eq. (1-4), $Q_f = 0$", "cite": "cigre364"},
-    "SDSCR": {"formula": r"$\dfrac{|V_i|^2}{|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|}$",
+    "SDSCR": {"formula": r"$\dfrac{S_\mathrm{b}\,|V_i|^2}{|Z_{ii}|\,|P_i + \sum_{j \ne i} w_{ij} P_j|}$",
               "interaction": r"$w_{ij} = (Z_{ij}/Z_{ii})\,(V_i/V_j)^*$",
               "source": "Wu et al. (2018)", "cite": "wu2018"},
 }
