@@ -9,4 +9,6 @@ logs/
 tasks.json
 current_research_handoff/
 results/
+paper/build/*
+!paper/build/main.pdf
 paper/revisions.xlsx

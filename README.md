@@ -1,6 +1,14 @@
 # System-Strength Screening Metrics over Time
 
-Reproducible code, public data, and results for a time-ordered comparison of four system-strength screening metrics (SCR, WSCR, ESCR, SDSCR) at three IBR sites added to the Glover 37-bus benchmark, over a 168-hour week and the full N-1 line set.
+Reproducible code, public data, and results for a time-ordered comparison of four system-strength screening metrics (SCR, WSCR, ESCR, SDSCR) at three IBR sites added to the Glover 37-bus benchmark, over a 168-hour week and the full N-1 branch set (lines and transformers).
+
+## Manuscript
+
+The paper, *Evaluating Fault-Current System Strength Metrics under Time-Varying Operation and N-1 Contingencies*, is in [`paper/`](paper/): [`main.tex`](paper/main.tex), with one file per section in [`paper/sections/`](paper/sections/) and the references in [`paper/refs.bib`](paper/refs.bib). It reads its figures, Table I and every run number (`figures/glover37/numbers.tex`) from [`figures/glover37/`](figures/glover37/), so `make report` must run before it is built:
+
+```bash
+cd paper && latexmk -pdf -outdir=build main.tex
+```
 
 ## Reproduce
 
@@ -17,7 +25,7 @@ Results are not in git: run `make strength` first (about 8 min) before `make rep
 
 ```bash
 make validate          # E0: PowerWorld agreement
-make screen            # N-1 line set
+make screen            # N-1 branch set (lines and transformers)
 make simulate          # 168 h metrics run: every state and ESCR MIIF variant
 make analyze
 make report
@@ -47,7 +55,8 @@ Two variables can be set on any target: `PYTHON` (for example `PYTHON=.venv/bin/
 - [`data/powerworld/glover37/`](data/powerworld/glover37/): PowerWorld reference data
 - [`data/se3_2025.csv`](data/se3_2025.csv): public temporal scaling signal
 - `results/glover37/`: generated results (git-ignored)
-- [`figures/glover37/`](figures/glover37/): generated figures
+- [`figures/glover37/`](figures/glover37/): generated figures, Table I and the paper's number macros
+- [`paper/`](paper/): the manuscript (LaTeX, IEEE conference template)
 - [`tools/`](tools/): the results explorer
 - [`tests/`](tests/): targeted checks
 
